@@ -13,6 +13,4 @@ for i in `find ./filechecks/${p} -name "*.ll"` ; do
   echo $i
   bin/sf-compiler $i .tmp.s ${p}
   $1 $i < .tmp.s
-  echo 'ok'
-done
 done
