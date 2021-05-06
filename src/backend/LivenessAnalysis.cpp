@@ -101,15 +101,6 @@ vector<vector<bool>> RegisterGraph::LiveInterval(Module &M)
             }
         }
 
-        if (V->hasNUses(0) && isa<Instruction>(V)) {
-            // if it has no use
-            Instruction *I = dyn_cast<Instruction>(V);
-            Instruction *Nxt = I->getNextNode();
-            if (Nxt != NULL) {
-                live[Nxt][i] = true;
-            }
-        }
-
         if(isa<PHINode>(V)) {
             PHINode* phi = dyn_cast<PHINode>(V);
             //phinodes should be live from the beginning of the function.
@@ -135,25 +126,27 @@ vector<vector<bool>> RegisterGraph::LiveInterval(Module &M)
             vector<bool> PhiTerm = live[term];
             
             //Vector for storing liveness after terminator, before successor
-            map<unsigned,bool> Dead;
+            map<unsigned,int> Dead;
+            map<BasicBlock*,unsigned> NumPhi;
 
             for(BasicBlock* succ : successors(&BB)) {
                 for(PHINode& phi : succ->phis()) {
                     Value* incomeV = phi.getIncomingValueForBlock(&BB);
                     unsigned fv = findValue(incomeV);
                     if (fv != -1)
-                        Dead[fv] = true;
+                        Dead[fv] = 1;
+                    NumPhi[succ]++;
                 }
             }
 
             for(BasicBlock* succ : successors(&BB)) {
-                // int phinum = NumPhi[succ];
+                int phinum = NumPhi[succ];
                 for(PHINode& phi : succ->phis()) {
                     Value* incomeV = phi.getIncomingValueForBlock(&BB);
                     unsigned fv = findValue(incomeV);
 
-                    if (fv != -1 && live[&phi][fv]) {
-                        Dead[fv] = false;
+                    if (phinum >= 2 || (fv != -1 && live[&phi][fv])) {
+                        Dead[fv] = 0;
                     }
                 }
             }
@@ -163,22 +156,7 @@ vector<vector<bool>> RegisterGraph::LiveInterval(Module &M)
             }
 
             Dead.clear();
-
-            // Condition for BranchInst or SwitchInst should be alive
-            BranchInst *br;
-            SwitchInst *swc;
-            Value *cond = NULL;
-
-            if ((br = dyn_cast<BranchInst>(term)) && br->isConditional()) {
-                cond = br->getCondition();
-            } else if ((swc = dyn_cast<SwitchInst>(term))) {
-                cond = swc->getCondition();
-            }
-
-            if (cond != NULL) {
-                unsigned fv = findValue(cond);
-                if (fv != -1) PhiTerm[fv] = true;
-            }
+            NumPhi.clear();
 
             for(BasicBlock* succ : successors(&BB)) {
                 for(PHINode& phi : succ->phis()) {
