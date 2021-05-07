@@ -14,25 +14,42 @@ using namespace llvm::PatternMatch;
 class MergeBasicBlocks : public PassInfoMixin<MergeBasicBlocks> {
 private:
   pair<BasicBlock *, BasicBlock*> classifyMergeType(BasicBlock *BB);
-  void copyAndMerge(BasicBlock *BBPred, BasicBlock *BBSucc);
+  void mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc);
 public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &FAM);
 };
 
-void MergeBasicBlocks::copyAndMerge(BasicBlock *BBPred, BasicBlock *BBSucc) {
+void MergeBasicBlocks::mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc) {
+  // If the predecessor dominates the successor, simpy merge the successor into
+  // the predecessor.
+  if (DT.dominates(BBPred, BBSucc)) {
+    MergeBlockIntoPredecessor(BBSucc);
+  } else { 
+  // Otherwise copy the successor and merge the copied one into the predecessor.
+    ValueToValueMapTy VMap;
+    BasicBlock *BBAltered = CloneBasicBlock(BBSucc, VMap, "", F);
 
+    BranchInst *predBranchInst = dyn_cast<BranchInst>(BBPred->getTerminator());
+    assert(predBranchInst != nullptr);
+
+    for (unsigned i = 0; i < predBranchInst->getNumSuccessors(); ++i) {
+      predBranchInst->setSuccessor(i, BBAltered);
+    }
+
+    MergeBlockIntoPredecessor(BBAltered);
+  }
 }
 
 // Return a pair of mergeable BBs
 pair<BasicBlock *, BasicBlock*> MergeBasicBlocks::classifyMergeType(BasicBlock *BB) {
 
   Instruction *I = BB->getTerminator();
-  // If this is not a branch instruction, return
+  // If this is not a branch instruction, return.
   if (!isa<BranchInst>(I)) { 
     return {nullptr, nullptr};
   }
 
-  // Check if this branch instruction is mergeable
+  // Check if this branch instruction is mergeable.
   Value *COND;
   BasicBlock *BB_LEFT;
   BasicBlock *BB_RIGHT;
@@ -78,8 +95,9 @@ PreservedAnalyses MergeBasicBlocks::run(Function &F, FunctionAnalysisManager &FA
   for (const auto &BBPair : BBPairToMerge) {
     BasicBlock *BBPred = BBPair.first;
     BasicBlock *BBSucc = BBPair.second;
-    MergeBlockIntoPredecessor(BBSucc);
+    mergeSafely(&F, DT, BBPred, BBSucc);
   }
+
   return PreservedAnalyses::all();
 }
 
