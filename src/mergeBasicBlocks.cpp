@@ -3,6 +3,8 @@
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/PatternMatch.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 #include <set>
 #include <vector>
 using namespace llvm;
@@ -12,9 +14,14 @@ using namespace llvm::PatternMatch;
 class MergeBasicBlocks : public PassInfoMixin<MergeBasicBlocks> {
 private:
   pair<BasicBlock *, BasicBlock*> classifyMergeType(BasicBlock *BB);
+  void copyAndMerge(BasicBlock *BBPred, BasicBlock *BBSucc);
 public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &FAM);
 };
+
+void MergeBasicBlocks::copyAndMerge(BasicBlock *BBPred, BasicBlock *BBSucc) {
+
+}
 
 // Return a pair of mergeable BBs
 pair<BasicBlock *, BasicBlock*> MergeBasicBlocks::classifyMergeType(BasicBlock *BB) {
@@ -34,23 +41,23 @@ pair<BasicBlock *, BasicBlock*> MergeBasicBlocks::classifyMergeType(BasicBlock *
   if (match(I, m_Br(m_ConstantInt(C), m_BasicBlock(BB_LEFT), m_BasicBlock(BB_RIGHT))) &&
       C->isOne()) {
     // br i1 true, label %BB_LEFT, label %BB_RIGHT
-    outs() << "Case1" << BB_LEFT->getName() << "\n";
+    //outs() << "Case1 " << BB_LEFT->getName() << "\n";
     return {BB, BB_LEFT};
   } else if (match(I, m_Br(m_ConstantInt(C), m_BasicBlock(BB_LEFT), m_BasicBlock(BB_RIGHT))) &&
       C->isZero()) {
     //br i1 false, label %BB_LEFT, label %BB_RIGHT
-    outs() << "Case2" << BB_RIGHT->getName() << "\n";
+    //outs() << "Case2 " << BB_RIGHT->getName() << "\n";
     return {BB, BB_RIGHT};
   } else if (match(I, m_Br(m_Value(COND), m_BasicBlock(BB_LEFT), m_Deferred(BB_LEFT)))) {
     //br i1 COND, label %BB_LEFT, label %BB_LEFT
-    outs() << "Case3" << BB_LEFT->getName() << "\n";
+    //outs() << "Case3 " << BB_LEFT->getName() << "\n";
     return {BB, BB_LEFT};
   } else if (match(I, m_UnconditionalBr(BB_LEFT))) {
     //br label %BB_LEFT
-    outs() << "Case4" << BB_LEFT->getName() << "\n";
+    //outs() << "Case4 " << BB_LEFT->getName() << "\n";
     return {BB, BB_LEFT};
   } else {
-    outs() << "Case5\n";
+    //outs() << "Case5\n";
     return {nullptr, nullptr};
   }
 }
@@ -66,6 +73,12 @@ PreservedAnalyses MergeBasicBlocks::run(Function &F, FunctionAnalysisManager &FA
     if (mergePair.first != nullptr && mergePair.second != nullptr) {
       BBPairToMerge.push_back(mergePair);
     }
+  }
+
+  for (const auto &BBPair : BBPairToMerge) {
+    BasicBlock *BBPred = BBPair.first;
+    BasicBlock *BBSucc = BBPair.second;
+    MergeBlockIntoPredecessor(BBSucc);
   }
   return PreservedAnalyses::all();
 }
