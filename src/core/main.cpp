@@ -10,6 +10,17 @@
 #include "llvm/Support/raw_os_ostream.h"
 #include "llvm/IR/PassManager.h"
 
+//add header for Dead argument elimination
+#include "llvm/Transforms/IPO/DeadArgumentElimination.h"
+//add header for Dead code elimination
+#include "llvm/Transforms/Scalar/ADCE.h"
+//add header for Branch-related optimizations including br -> switch
+#include "llvm/Transforms/Scalar/SimplifyCFG.h"
+//add header for Loop invariant code motion
+#include "llvm/Transforms/Scalar/LICM.h"
+//add header for Tail call elimination
+#include "llvm/Transforms/Scalar/TailRecursionElimination.h"
+
 #include <string>
 
 using namespace std;
@@ -37,8 +48,40 @@ int main(int argc, char *argv[]) {
   if (!M)
     return 1;
 
+  //////////////////////////////////////////////////// ADD FROM HERE
   // execute IR passes
+  FunctionPassManager FPM;
+  ModulePassManager MPM;
+
+  LoopAnalysisManager LAM;
+  FunctionAnalysisManager FAM;
+  CGSCCAnalysisManager CGAM;
   ModuleAnalysisManager MAM;
+
+  PassBuilder PB;
+
+  // register all the basic analyses with the managers.
+  PB.registerModuleAnalyses(MAM);
+  PB.registerCGSCCAnalyses(CGAM);
+  PB.registerFunctionAnalyses(FAM);
+  PB.registerLoopAnalyses(LAM);
+  PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+  // add existing passes
+  //add Dead code Elimination
+  FPM.addPass(ADCEPass());
+  //add Branch-related optimizations including br -> switch
+  FPM.addPass(SimplifyCFGPass());
+  //add Loop invariant code motion
+  FPM.addPass(createFunctionToLoopPassAdaptor(LICMPass()));
+  //add  Tail call elimination
+  FPM.addPass(TailCallElimPass());
+  // from FPM to MPM
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
+  //add Dead argument elimination
+  MPM.addPass(DeadArgumentEliminationPass());
+  MPM.run(*M, MAM);
+  //////////////////////////////////////////////////// BY HERE
+
   UnfoldVectorInstPass().run(*M, MAM);
   LivenessAnalysis().run(*M, MAM);
   SpillCostAnalysis().run(*M, MAM);
