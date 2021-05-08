@@ -19,6 +19,28 @@ public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &FAM);
 };
 
+PreservedAnalyses MergeBasicBlocks::run(Function &F, FunctionAnalysisManager &FAM) {
+  DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(F);
+  vector<pair<BasicBlock*, BasicBlock*>> BBPairToMerge;
+
+  // First, search for mergeable pairs.
+  for (auto &BB : F) {
+    pair<BasicBlock*, BasicBlock*> mergePair = classifyMergeType(&BB);
+    if (mergePair.first != nullptr && mergePair.second != nullptr) {
+      BBPairToMerge.push_back(mergePair);
+    }
+  }
+
+  // Then, merge the pairs safely. 
+  for (const auto &BBPair : BBPairToMerge) {
+    BasicBlock *BBPred = BBPair.first;
+    BasicBlock *BBSucc = BBPair.second;
+    mergeSafely(&F, DT, BBPred, BBSucc);
+  }
+
+  return PreservedAnalyses::all();
+}
+
 void MergeBasicBlocks::mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc) {
   // If the predecessor dominates the successor, simpy merge the successor into
   // the predecessor.
@@ -77,7 +99,6 @@ void MergeBasicBlocks::mergeSafely(Function *F, const DominatorTree &DT, BasicBl
 
 // Return a pair of mergeable BBs
 pair<BasicBlock *, BasicBlock*> MergeBasicBlocks::classifyMergeType(BasicBlock *BB) {
-
   Instruction *I = BB->getTerminator();
   // If this is not a branch instruction, return.
   if (!isa<BranchInst>(I)) { 
@@ -93,48 +114,20 @@ pair<BasicBlock *, BasicBlock*> MergeBasicBlocks::classifyMergeType(BasicBlock *
   if (match(I, m_Br(m_ConstantInt(C), m_BasicBlock(BB_LEFT), m_BasicBlock(BB_RIGHT))) &&
       C->isOne()) {
     // br i1 true, label %BB_LEFT, label %BB_RIGHT
-    //outs() << "Case1 " << BB_LEFT->getName() << "\n";
     return {BB, BB_LEFT};
   } else if (match(I, m_Br(m_ConstantInt(C), m_BasicBlock(BB_LEFT), m_BasicBlock(BB_RIGHT))) &&
       C->isZero()) {
     //br i1 false, label %BB_LEFT, label %BB_RIGHT
-    //outs() << "Case2 " << BB_RIGHT->getName() << "\n";
     return {BB, BB_RIGHT};
   } else if (match(I, m_Br(m_Value(COND), m_BasicBlock(BB_LEFT), m_Deferred(BB_LEFT)))) {
     //br i1 COND, label %BB_LEFT, label %BB_LEFT
-    //outs() << "Case3 " << BB_LEFT->getName() << "\n";
     return {BB, BB_LEFT};
   } else if (match(I, m_UnconditionalBr(BB_LEFT))) {
     //br label %BB_LEFT
-    //outs() << "Case4 " << BB_LEFT->getName() << "\n";
     return {BB, BB_LEFT};
   } else {
-    //outs() << "Case5\n";
     return {nullptr, nullptr};
   }
-}
-
-PreservedAnalyses MergeBasicBlocks::run(Function &F, FunctionAnalysisManager &FAM) {
-  DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(F);
-
-  vector<pair<BasicBlock*, BasicBlock*>> BBPairToMerge;
-
-  // First, search for mergeable pairs.
-  for (auto &BB : F) {
-    pair<BasicBlock*, BasicBlock*> mergePair = classifyMergeType(&BB);
-    if (mergePair.first != nullptr && mergePair.second != nullptr) {
-      BBPairToMerge.push_back(mergePair);
-    }
-  }
-
-  // Then, merge the pairs safely. 
-  for (const auto &BBPair : BBPairToMerge) {
-    BasicBlock *BBPred = BBPair.first;
-    BasicBlock *BBSucc = BBPair.second;
-    mergeSafely(&F, DT, BBPred, BBSucc);
-  }
-
-  return PreservedAnalyses::all();
 }
 
 extern "C" ::llvm::PassPluginLibraryInfo
