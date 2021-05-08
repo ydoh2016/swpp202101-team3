@@ -5,7 +5,7 @@
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
-#include <set>
+#include "llvm/Transforms/Utils/ValueMapper.h"
 #include <vector>
 using namespace llvm;
 using namespace std;
@@ -25,18 +25,53 @@ void MergeBasicBlocks::mergeSafely(Function *F, const DominatorTree &DT, BasicBl
   if (DT.dominates(BBPred, BBSucc)) {
     MergeBlockIntoPredecessor(BBSucc);
   } else { 
-  // Otherwise copy the successor and merge the copied one into the predecessor.
-    ValueToValueMapTy VMap;
-    BasicBlock *BBAltered = CloneBasicBlock(BBSucc, VMap, "", F);
+    // Otherwise copy the successor and merge the copied one into the predecessor.
+    ValueToValueMapTy VM;
+    BasicBlock *BBDummy = CloneBasicBlock(BBSucc, VM, "", F);
+
+    // Since the CloneBasicBlock function does not do a remapping for us, manually
+    // remap operands of the BBDummy with the VM.
+    for (auto &I : *BBSucc) {
+      Value *to = VM[&I];
+      for (auto it = I.use_begin(), end = I.use_end(); it != end;) {
+        Use &U = *it++;
+        User *Usr = U.getUser();
+        Instruction *UsrI = dyn_cast<Instruction>(Usr);
+        assert(UsrI); // This must be an instruction
+        if (UsrI->getParent() == BBDummy) {
+          U.set(to);
+        }
+      }
+    }
+    
+    // Since the CloneBasicBlock function merely gets rid of phi nodes, replace 
+    // every phi node in the successor manually.
+    for (auto &I : *BBDummy) {
+      PHINode *PN = dyn_cast<PHINode>(&I);
+      if (PN != nullptr) {
+        Value *replacingVal = PN->getIncomingValueForBlock(BBPred);
+        if (replacingVal != nullptr) {
+          //outs() << replacingVal->getName() << "\n";
+          for (auto it = I.use_begin(), end = I.use_end(); it != end;) {
+            Use &U = *it++;
+            U.set(replacingVal);
+          }
+        }
+      }
+    }
 
     BranchInst *predBranchInst = dyn_cast<BranchInst>(BBPred->getTerminator());
     assert(predBranchInst != nullptr);
 
+    // Change all the successors into the BBDummy so that the BBDummy has only
+    // one predecessor and the predecessor has only one successor.
     for (unsigned i = 0; i < predBranchInst->getNumSuccessors(); ++i) {
-      predBranchInst->setSuccessor(i, BBAltered);
+      predBranchInst->setSuccessor(i, BBDummy);
     }
-
-    MergeBlockIntoPredecessor(BBAltered);
+    
+    // Finally, merge the dummy BB into the predecessor. Note that phi nodes
+    // in the successor are removed.
+    MergeBlockIntoPredecessor(BBDummy);
   }
 }
 
@@ -83,8 +118,8 @@ PreservedAnalyses MergeBasicBlocks::run(Function &F, FunctionAnalysisManager &FA
   DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(F);
 
   vector<pair<BasicBlock*, BasicBlock*>> BBPairToMerge;
-  vector<BasicBlock> BBsToRemove; // Which basic blocks will be away?
 
+  // First, search for mergeable pairs.
   for (auto &BB : F) {
     pair<BasicBlock*, BasicBlock*> mergePair = classifyMergeType(&BB);
     if (mergePair.first != nullptr && mergePair.second != nullptr) {
@@ -92,6 +127,7 @@ PreservedAnalyses MergeBasicBlocks::run(Function &F, FunctionAnalysisManager &FA
     }
   }
 
+  // Then, merge the pairs safely. 
   for (const auto &BBPair : BBPairToMerge) {
     BasicBlock *BBPred = BBPair.first;
     BasicBlock *BBSucc = BBPair.second;
