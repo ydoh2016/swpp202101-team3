@@ -32,4 +32,5 @@ echo "CXXFLAGS=${CXXFLAGS}" >>Makefile
 echo "LDFLAGS=${LDFLAGS}" >>Makefile
 echo "GTESTSRC=${GTESTSRC}" >> Makefile
 echo "FILECHECK_PATH=$1/FileCheck" >> Makefile
+echo "ISYSROOT=${ISYSROOT}" >> Makefile
 cat Makefile.template >>Makefile

@@ -14,7 +14,7 @@ test: all
 	@echo "(make test) IMPLEMENT THIS!"
 
 bin/sf-compiler: $(OBJ_CORE) $(OBJ_BACKEND)
-	@$(CXX) $(LDFLAGS) -o bin/sf-compiler $(OBJ_CORE) $(OBJ_BACKEND)
+	@$(CXX) $(ISYSROOT) $(LDFLAGS) -o bin/sf-compiler $(OBJ_CORE) $(OBJ_BACKEND)
 
 obj/core/%.o: src/core/%.cpp 
 	@echo "compiling src/core/$<..."
