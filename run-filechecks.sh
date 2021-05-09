@@ -26,7 +26,7 @@ done
 
 
 
-if [ "${#failed_opts[@]}" -ne 0 ]; then
+if [[ "${#failed_opts[@]}" -ne 0 ]]; then
   echo "== Failed Test List =="
   for i in "${failed_opts[@]}"; do
     echo $i
