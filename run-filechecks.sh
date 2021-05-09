@@ -6,9 +6,9 @@ if [ "$#" -ne 1 ]; then
 fi
 
 echo "--- Start FileCheck.. ---"
-#set -e
+set -e
 
 for i in `find ./filechecks -name "*.ll"` ; do
-  ./sf-compiler $i .tmp.s
+  ./sf-compiler $i -o .tmp.s
   $1 $i < .tmp.s
 done
