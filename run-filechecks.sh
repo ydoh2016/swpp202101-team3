@@ -6,9 +6,21 @@ if [ "$#" -ne 1 ]; then
 fi
 
 echo "--- Start FileCheck.. ---"
-#set -e
+set -e
 
-for i in `find ./filechecks -name "*.ll"` ; do
-  ./sf-compiler $i .tmp.s
-  $1 $i < .tmp.s
+failed_opts=()
+
+for p in `ls -1 ./filechecks`; do
+  echo "== Testing Optimizer ${p} =="
+  for i in `find ./filechecks/${p} -name "*.ll"` ; do
+    echo $i
+    bin/sf-compiler $i .tmp.s
+    $1 $i < .tmp.s
+    if [ "$?" -eq 0 ]; then
+      echo 'PASSED'
+    else
+      failed_opts+=("$i")
+    fi
+  done
 done
+
