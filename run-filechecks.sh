@@ -8,7 +8,11 @@ fi
 echo "--- Start FileCheck.. ---"
 set -e
 
-for i in `find ./filechecks -name "*.ll"` ; do
-  ./sf-compiler $i -o .tmp.s
+for p in adce dae licm simplifyCFG tailCallElim; do
+for i in `find ./filechecks/${p} -name "*.ll"` ; do
+  echo $i
+  bin/sf-compiler $i .tmp.s ${p}
   $1 $i < .tmp.s
+  echo 'ok'
+done
 done
