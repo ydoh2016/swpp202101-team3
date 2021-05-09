@@ -11,7 +11,8 @@ _dummy := $(shell mkdir -p obj obj/core obj/backend bin)
 all: bin/sf-compiler
 
 test: all
-	@echo "(make test) IMPLEMENT THIS!"
+	@echo "Running a fileCheck"
+	./run-filechecks.sh ${FILECHECK_PATH}
 
 bin/sf-compiler: $(OBJ_CORE) $(OBJ_BACKEND)
 	@$(CXX) $(LDFLAGS) -o bin/sf-compiler $(OBJ_CORE) $(OBJ_BACKEND)
