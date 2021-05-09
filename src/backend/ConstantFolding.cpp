@@ -5,15 +5,13 @@ using namespace llvm;
 using namespace llvm::PatternMatch;
 
 namespace backend {
-  bool checkConstant(Value* X, Value* Y) {
+  bool ConstantFolding::checkConstant(Value* X, Value* Y) {
     auto* C1 = dyn_cast<ConstantInt>(X);
     auto* C2 = dyn_cast<ConstantInt>(Y);
     if(C1 == nullptr || C2 == nullptr) return false;
     return true;
   }
-  PreservedAnalyses run(Module &M, AnalysisManager<Module> &MAM) {
-    for(auto&F : M) {
-      //outs() << "Constant Folding start ...\n";
+  PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM) {
       std::vector<Instruction*> instsToRemove;
       uint64_t ua;
       uint64_t ub;
@@ -134,7 +132,6 @@ namespace backend {
       for(auto& I : instsToRemove) {
         I -> eraseFromParent();
       }
-    }
     return PreservedAnalyses::none();
   }
 }

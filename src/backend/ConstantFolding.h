@@ -16,7 +16,7 @@ namespace backend {
 class ConstantFolding : public PassInfoMixin<ConstantFolding> {
 public:
   bool checkConstant(Value* X, Value* Y);
-  PreservedAnalyses run(Module &, AnalysisManager<Module> &);
+  PreservedAnalyses run(Function &, FunctionAnalysisManager &);
 };
 }
 
