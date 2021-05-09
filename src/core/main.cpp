@@ -4,7 +4,6 @@
 #include "../backend/GEPUnpack.h"
 #include "../backend/RegisterSpill.h"
 #include "../backend/UnfoldVectorInst.h"
-#include "../backend/MergeBasicBlocks.h"
 
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/Support/raw_ostream.h"
@@ -39,27 +38,7 @@ int main(int argc, char *argv[]) {
     return 1;
 
   // execute IR passes
-  FunctionPassManager FPM;
-  ModulePassManager MPM;
-
-  LoopAnalysisManager LAM;
-  FunctionAnalysisManager FAM;
-  CGSCCAnalysisManager CGAM;
   ModuleAnalysisManager MAM;
-
-  PassBuilder PB;
-
-  PB.registerModuleAnalyses(MAM);
-  PB.registerCGSCCAnalyses(CGAM);
-  PB.registerFunctionAnalyses(FAM);
-  PB.registerLoopAnalyses(LAM);
-  PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
-
-  FPM.addPass(MergeBasicBlocksPass());
-
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.run(*M, MAM);
-
   UnfoldVectorInstPass().run(*M, MAM);
   LivenessAnalysis().run(*M, MAM);
   SpillCostAnalysis().run(*M, MAM);
@@ -68,7 +47,7 @@ int main(int argc, char *argv[]) {
   GEPUnpackPass().run(*M, MAM);
   RegisterSpillPass().run(*M, MAM);
   // use this for debugging
-  outs() << *M;
+  //outs() << *M;
 
   // execute backend to emit assembly
   Backend B(optOutput, optPrintProgress);
