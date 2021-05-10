@@ -21,7 +21,7 @@ for p in `ls -1 ./filechecks`; do
     if [[ $CODE -eq -124 ]]; then
       echo "TIMEOUT" 1>&2
       exit 1
-    elif [[ $CODE -eq 0 ]]; then
+    elif [[ $CODE -ne 0 ]]; then
       echo "COMPILER FAILURE" 1>&2
       exit 1
     else
