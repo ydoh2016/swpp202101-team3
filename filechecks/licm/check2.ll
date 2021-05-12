@@ -1,4 +1,4 @@
-; CHECK-LABEL:  start f 2:
+; CHECK-LABEL:  start main 2:
 ; CHECK: .entry:
 ; CHECK-NEXT: [[REG1:r[0-9]+]] = mul arg1 1 32
 ; CHECK-NEXT: [[REG3:r[0-9]+]] = mul arg1 1 32
@@ -20,8 +20,8 @@
 ; CHECK: .ops.1:
 ; CHECK-NEXT: [[REG1]] = add [[REG1]] arg2 32
 ; CHECK-NEXT: ret [[REG3]]
-; CHECK-LABEL: end f
-define i32 @f(i32 %a, i32 %b) {
+; CHECK-LABEL: end main
+define i32 @main(i32 %a, i32 %b) {
 entry:
   br label %for.header
 for.header:

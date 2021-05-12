@@ -18,6 +18,10 @@
 ; CHECK-NEXT: [[REG4]] = mul [[REG6]] 1 32
 ; CHECK-NEXT: br .tailrecurse
 ; CHECK-LABEL: end f
+; CHECK-LABEL:  start main 4:
+; CHECK: call f arg1 arg2 arg3 arg4
+; CHECK-NEXT: ret 0
+; CHECK-LABEL: end main
 define void @f(i32 %disk, i32 %src, i32 %dest, i32 %spare) {
 bb_entry:
     %cond = icmp eq i32 %disk, 0
@@ -28,5 +32,10 @@ bb_else:
     %disk.0 = add i32 %disk, -1
     call void @f( i32 %disk.0, i32 %src, i32 %spare, i32 %dest)
     call void @f( i32 %disk.0, i32 %spare, i32 %dest, i32 %src)
+    ret void
+}
+
+define void @main(i32 %disk, i32 %src, i32 %dest, i32 %spare) {
+    call void @f(i32 %disk, i32 %src, i32 %dest, i32 %spare)
     ret void
 }

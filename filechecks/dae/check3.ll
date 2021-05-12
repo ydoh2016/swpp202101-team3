@@ -9,10 +9,10 @@
 ; CHECK: .bb_exit:
 ; CHECK-NEXT: ret [[REG3]]
 ; CHECK-LABEL: end f
-; CHECK-LABEL:  start f2 0:
+; CHECK-LABEL:  start main 0:
 ; CHECK: [[REG1:r[0-9]+]] = call f 0 1
 ; CHECK-NEXT: ret [[REG1]]
-; CHECK-LABEL: end f2
+; CHECK-LABEL: end main
 define internal i32 @f(i32 %x, i32 %y, i32 %z) {
     %t = add i32 %x, %y
     %tt = add i32 %x, -1
@@ -25,7 +25,7 @@ bb_exit:
     ret i32 %t
 }
 
-define i32 @f2() {
+define i32 @main() {
     %x = call i32 @f(i32 0, i32 1, i32 2)
     ret i32 %x
 }

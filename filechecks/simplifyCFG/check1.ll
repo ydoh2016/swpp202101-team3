@@ -2,7 +2,7 @@ declare void @h1()
 declare void @h2()
 declare void @h3()
 
-; CHECK-LABEL:  start g 1:
+; CHECK-LABEL:  start main 1:
 ; CHECK: .entry:
 ; CHECK-NEXT: [[REG1:r[0-9]+]] = icmp eq arg1 10 32
 ; CHECK-NEXT: br [[REG1]] .A .ELSE1
@@ -19,9 +19,9 @@ declare void @h3()
 ; CHECK: .ELSE2:
 ; CHECK-NEXT: call h3
 ; CHECK-NEXT: ret 0
-; CHECK-LABEL: end g
+; CHECK-LABEL: end main
 
-define void @g(i32 %val) nounwind {
+define void @main(i32 %val) nounwind {
 entry:
     %c1 = icmp eq i32 %val, 10
     br i1 %c1, label %A, label %ELSE1

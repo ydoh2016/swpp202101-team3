@@ -37,6 +37,10 @@
 ; CHECK-NEXT: [[REG1]] = select [[REG3]] [[REG4]] 1
 ; CHECK-NEXT: ret [[REG1]]
 ; CHECK-LABEL: end f
+; CHECK-LABEL:  start main 2:
+; CHECK: [[REG1:r[0-9]+]] = call f arg1 arg2
+; CHECK-NEXT: ret [[REG1]]
+; CHECK-LABEL: end main
 define i32 @f1(i32 %x) {
 entry:
 	%tmp.1 = icmp sgt i32 %x, 0
@@ -61,4 +65,8 @@ then:
 	ret i32 %tmp.7
 else:
 	ret i32 1
+}
+define i32 @main(i32 %x, i32 %y) {
+	%v = call i32 @f(i32 %x, i32 %y)
+	ret i32 %v
 }

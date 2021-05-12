@@ -1,5 +1,5 @@
-define i32 @f() {
-; CHECK-LABEL:  start f 0:
+define i32 @main() {
+; CHECK-LABEL:  start main 0:
 ; CHECK: [[REG1:r[0-9]+]] = add 1 1 32
 ; CHECK-NEXT: br .bb_true
 ; CHECK: .bb_true:
@@ -8,7 +8,7 @@ define i32 @f() {
 ; CHECK-NEXT: br .bb_exit
 ; CHECK: .bb_exit:
 ; CHECK-NEXT: ret [[REG1]]
-; CHECK-LABEL: end f
+; CHECK-LABEL: end main
     %y = add i32 1, 1
     %z = add i32 %y, 2
     %w = mul i32 %y, 2
