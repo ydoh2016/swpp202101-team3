@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
   GEPUnpackPass().run(*M, MAM);
   RegisterSpillPass().run(*M, MAM);
   // use this for debugging
-  outs() << *M;
+  //outs() << *M;
 
   // execute backend to emit assembly
   Backend B(optOutput, optPrintProgress);

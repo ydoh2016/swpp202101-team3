@@ -27,7 +27,7 @@ PreservedAnalyses MergeBasicBlocksPass::run(Function& F, FunctionAnalysisManager
 }
 
 void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc) {
-  // If the predecessor dominates the successor, simpy merge the successor into
+  // If the predecessor dominates the successor, simply merge the successor into
   // the predecessor.
   if (DT.dominates(BBPred, BBSucc)) {
     MergeBlockIntoPredecessor(BBSucc);
