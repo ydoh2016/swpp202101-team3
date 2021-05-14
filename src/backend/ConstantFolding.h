@@ -16,6 +16,7 @@ using namespace llvm;
 namespace backend {
 class ConstantFolding : public PassInfoMixin<ConstantFolding> {
 public:
+  bool foldICmp(ICmpInst::Predicate Pred, ConstantInt* C1, ConstantInt* C2);
   bool checkConstant(Value* X, Value* Y);
   PreservedAnalyses run(Function &, FunctionAnalysisManager &);
 };

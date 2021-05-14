@@ -5,6 +5,42 @@ using namespace llvm;
 using namespace llvm::PatternMatch;
 
 namespace backend {
+bool ConstantFolding::foldICmp(ICmpInst::Predicate Pred, ConstantInt* C1, ConstantInt* C2) {
+  if(Pred == ICmpInst::ICMP_EQ) {
+    if(C1 -> getZExtValue() == C2 -> getZExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_NE) {
+    if(C1 -> getZExtValue() != C2 -> getZExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_UGT) {
+    if(C1 -> getZExtValue() > C2 -> getZExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_SGT) {
+    if(C1 -> getSExtValue() > C2 -> getSExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_UGE) {
+    if(C1 -> getZExtValue() >= C2 -> getZExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_SGE) {
+    if(C1 -> getSExtValue() >= C2 -> getSExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_ULT) {
+    if(C1 -> getZExtValue() < C2 -> getZExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_SLT) {
+    if(C1 -> getSExtValue() < C2 -> getSExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_ULE) {
+    if(C1 -> getZExtValue() <= C2 -> getZExtValue()) return true;
+    else return false;
+  } else if(Pred == ICmpInst::ICMP_SLE) {
+    if(C1 -> getSExtValue() <= C2 -> getSExtValue()) return true;
+    else return false;
+  }
+  outs() << "Unclassified predicate!\n"; // process should not reach here.
+
+  return true;
+}
 bool ConstantFolding::checkConstant(Value* X, Value* Y) {
   auto* C1 = dyn_cast<ConstantInt>(X);
   auto* C2 = dyn_cast<ConstantInt>(Y);
@@ -15,9 +51,9 @@ PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM
     for(auto& BB : F) {
       for(auto I_it = BB.begin(); I_it != BB.end();) {
         /* Including constructing iteration,
-         * there were helps in fixing errors in this code from my teammates,
+         * my teammates helped with fixing errors,
          * @JeffLee77-prog, @ObjectOrientedLife, @Chavo-Kim,
-         * so I briefly keep reference in comment. */
+         * therefore I briefly keep reference through this comment. */
         auto& I = *I_it++;
         Value* X;
         Value* Y;
@@ -25,73 +61,12 @@ PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM
         BasicBlock* BB2;
         ICmpInst::Predicate Pred;
         if(match(&I, m_ICmp(Pred, m_Value(X), m_Value(Y)))) { // fold icmp inst
-          /* use getbool(C1 ->)Error : static llvm::Constant* llvm::ConstantInt::getFalse(llvm::Type*): Assertion `Ty->isIntOrIntVectorTy(1) && "Type not i1 or vector of i1."' failed. 
-             Error : void llvm::Value::doRAUW(llvm::Value*, llvm::Value::ReplaceMetadataUses): Assertion `New->getType() == getType() && "replaceAllUses of value with new value of different type!"' failed. */
-          if(checkConstant(X, Y)) { // todo: fix bool -> type* issue
+          if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            bool bresult; // this is the result of constant comparison
-            if(Pred == ICmpInst::ICMP_EQ) {
-              if(C1 -> getZExtValue() == dyn_cast<ConstantInt>(Y) -> getZExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpEq = ConstantInt::getBool(F.getContext(), bresult);
-              I.replaceAllUsesWith(CICmpEq);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_NE) {
-              if(dyn_cast<ConstantInt>(X) -> getZExtValue() != dyn_cast<ConstantInt>(Y) -> getZExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpNe = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpNe);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_UGT) {
-              if(dyn_cast<ConstantInt>(X) -> getZExtValue() > dyn_cast<ConstantInt>(Y) -> getZExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpUgt = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpUgt);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_SGT) {
-              if(dyn_cast<ConstantInt>(X) -> getSExtValue() > dyn_cast<ConstantInt>(Y) -> getSExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpSgt = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpSgt);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_UGE) {
-              if(dyn_cast<ConstantInt>(X) -> getZExtValue() >= dyn_cast<ConstantInt>(Y) -> getZExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpUge = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpUge);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_SGE) {
-              if(dyn_cast<ConstantInt>(X) -> getSExtValue() >= dyn_cast<ConstantInt>(Y) -> getSExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpSge = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpSge);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_ULT) {
-              if(dyn_cast<ConstantInt>(X) -> getZExtValue() < dyn_cast<ConstantInt>(Y) -> getZExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpUlt = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpUlt);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_SLT) {
-              if(dyn_cast<ConstantInt>(X) -> getSExtValue() < dyn_cast<ConstantInt>(Y) -> getSExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpSlt = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpSlt);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_ULE) {
-              if(dyn_cast<ConstantInt>(X) -> getZExtValue() <= dyn_cast<ConstantInt>(Y) -> getZExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpUle = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpUle);
-              I.eraseFromParent();
-            } else if(Pred == ICmpInst::ICMP_SLE) {
-              if(dyn_cast<ConstantInt>(X) -> getSExtValue() <= dyn_cast<ConstantInt>(Y) -> getSExtValue()) bresult = true;
-              else bresult = false;
-              auto* CICmpSle = ConstantInt::getBool(dyn_cast<ConstantInt>(X) -> getType(), bresult);
-              I.replaceAllUsesWith(CICmpSle);
-              I.eraseFromParent();
-            }
+            auto* CICmp = ConstantInt::getBool(F.getContext(), foldICmp(Pred, C1, C2));
+            I.replaceAllUsesWith(CICmp);
+            I.eraseFromParent();
           }
         } else if(match(&I, m_Br(m_Value(X), m_BasicBlock(BB1), m_BasicBlock(BB2)))) { // fold br inst
           BasicBlock::iterator bbit(I);
@@ -103,49 +78,56 @@ PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM
           if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            I.replaceAllUsesWith(ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() + C2 -> getZExtValue(), false));
+            auto* CAdd = ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() + C2 -> getZExtValue(), false);
+            I.replaceAllUsesWith(CAdd);
             I.eraseFromParent();
           }
         } else if(match(&I, m_Sub(m_Value(X), m_Value(Y)))) { // fold sub inst
           if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            I.replaceAllUsesWith(ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() - C2 -> getZExtValue(), false));
+            auto* CSub = ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() - C2 -> getZExtValue(), false);
+            I.replaceAllUsesWith(CSub);
             I.eraseFromParent();
           }
         } else if(match(&I, m_Mul(m_Value(X), m_Value(Y)))) { // fold mul inst
           if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            I.replaceAllUsesWith(ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() * C2 -> getZExtValue(), false));
+            auto* CMul = ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() * C2 -> getZExtValue(), false);
+            I.replaceAllUsesWith(CMul);
             I.eraseFromParent();
           }
         } else if(match(&I, m_UDiv(m_Value(X), m_Value(Y)))) { // fold udiv inst
           if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            I.replaceAllUsesWith(ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() / C2 -> getZExtValue(), false));
+            auto* CUDiv = ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() / C2 -> getZExtValue(), false);
+            I.replaceAllUsesWith(CUDiv);
             I.eraseFromParent();
           }
         } else if(match(&I, m_SDiv(m_Value(X), m_Value(Y)))) { // fold sdiv inst
           if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            I.replaceAllUsesWith(ConstantInt::get(C1 -> getType(), C1 -> getSExtValue() / C2 -> getSExtValue(), true));
+            auto* CSDiv = ConstantInt::get(C1 -> getType(), C1 -> getSExtValue() / C2 -> getSExtValue(), true);
+            I.replaceAllUsesWith(CSDiv);
             I.eraseFromParent();
           }
         } else if(match(&I, m_URem(m_Value(X), m_Value(Y)))) { // fold urem inst
           if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            I.replaceAllUsesWith(ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() % C2 -> getZExtValue(), false));
+            auto* CURem = ConstantInt::get(C1 -> getType(), C1 -> getZExtValue() % C2 -> getZExtValue(), false);
+            I.replaceAllUsesWith(CURem);
             I.eraseFromParent();
           }
         } else if(match(&I, m_SRem(m_Value(X), m_Value(Y)))) { // fold srem inst
           if(checkConstant(X, Y)) {
             ConstantInt* C1 = dyn_cast<ConstantInt>(X);
             ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-            I.replaceAllUsesWith(ConstantInt::get(C1 -> getType(), C1 -> getSExtValue() % C2 -> getSExtValue(), true));
+            auto* CSRem = ConstantInt::get(C1 -> getType(), C1 -> getSExtValue() % C2 -> getSExtValue(), true);
+            I.replaceAllUsesWith(CSRem);
             I.eraseFromParent();
           }
         }
