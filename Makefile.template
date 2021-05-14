@@ -1,21 +1,27 @@
 .SUFFIXES : .cpp .o
 
-SRC_CORE=$(wildcard src/core/*.cpp)
-SRC_BACKEND=$(wildcard src/backend/*.cpp)
+SRC_ALL=$(wildcard src/core/*.cpp)
+SRC_CORE=$(filter-out src/core/test_main.cpp, $(SRC_ALL))
+SRC_TEST=$(filter-out src/core/main.cpp, $(SRC_ALL))
 
+SRC_BACKEND=$(wildcard src/backend/*.cpp)
+OBJ_TEST=$(SRC_TEST:src/core/%.cpp=obj/core/%.o) obj/gtest_all.o
 OBJ_CORE=$(SRC_CORE:src/core/%.cpp=obj/core/%.o)
 OBJ_BACKEND=$(SRC_BACKEND:src/backend/%.cpp=obj/backend/%.o)
 
 _dummy := $(shell mkdir -p obj obj/core obj/backend bin)
 
-all: bin/sf-compiler
+all: bin/sf-compiler bin/sf-compiler-tests
 
 test: all
-	@echo "Running a fileCheck"
-	./run-filechecks.sh ${FILECHECK_PATH}
+	@bin/sf-compiler-tests
+	@./run-filechecks.sh $(FILECHECK_PATH)
 
 bin/sf-compiler: $(OBJ_CORE) $(OBJ_BACKEND)
-	@$(CXX) $(LDFLAGS) -o bin/sf-compiler $(OBJ_CORE) $(OBJ_BACKEND)
+	@$(CXX) $(ISYSROOT) $(LDFLAGS) -o bin/sf-compiler $(OBJ_CORE) $(OBJ_BACKEND)
+
+bin/sf-compiler-tests: $(OBJ_TEST) $(OBJ_BACKEND) 
+	@$(CXX) $(ISYSROOT) $(LDFLAGS) -o bin/sf-compiler-tests $(OBJ_TEST) $(OBJ_BACKEND)
 
 obj/core/%.o: src/core/%.cpp 
 	@echo "compiling src/core/$<..."
@@ -23,6 +29,10 @@ obj/core/%.o: src/core/%.cpp
 
 obj/backend/%.o: src/backend/%.cpp $(filter-out src/backend/%.h, $(SRC_BACKEND))
 	@echo "compiling src/backend/$<..."
+	@$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+obj/gtest_all.o: $(GTESTSRC)
+	@echo "compiling gtest_all.o..."
 	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
