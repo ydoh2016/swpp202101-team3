@@ -1,10 +1,10 @@
+#include "Team3Passes.h"
 #include "../backend/Backend.h"
 #include "../backend/AddressArgCast.h"
 #include "../backend/ConstExprRemove.h"
 #include "../backend/GEPUnpack.h"
 #include "../backend/RegisterSpill.h"
 #include "../backend/UnfoldVectorInst.h"
-#include "../backend/MergeBasicBlocks.h"
 
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/Support/raw_ostream.h"
@@ -26,6 +26,7 @@
 
 using namespace std;
 using namespace llvm;
+using namespace backend;
 
 //change arguments for main
 // from bin/sf-compiler src.ll output.s 
@@ -79,10 +80,6 @@ int main(int argc, char *argv[]) {
   PB.registerLoopAnalyses(LAM);
   PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
 
-  FPM.addPass(MergeBasicBlocksPass());
-
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.run(*M, MAM);
   // add existing passes
   //add Dead code Elimination
   if(specificPass == "all" || specificPass == "adce")  
@@ -96,11 +93,20 @@ int main(int argc, char *argv[]) {
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
-  // from FPM to MPM
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   //add Dead argument elimination
+  
+  FunctionPassManager FPM1;
+  //add custom passes
+  if(specificPass == "all" || specificPass == "mergebasicblocks")
+    FPM1.addPass(MergeBasicBlocksPass());
+
   if(specificPass == "all" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
+
+  // from FPM to MPM
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
 

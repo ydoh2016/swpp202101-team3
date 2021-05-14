@@ -1,0 +1,24 @@
+; ModuleID = 'filechecks/mergeBasicBlocks/check1.ll'
+source_filename = "filechecks/mergeBasicBlocks/check1.ll"
+
+define i32 @func1(i32 %arg1, i32 %arg2, i32 %arg3) {
+bb_1:
+  %cond1 = icmp eq i32 %arg1, %arg2
+  %a = sub i32 %arg2, %arg3
+  br i1 %cond1, label %bb_2, label %bb_3
+
+bb_2:                                             ; preds = %bb_1
+  %b2 = mul i32 %arg1, %arg2
+  ret i32 %b2
+
+bb_3:                                             ; preds = %bb_1
+  %b = mul i32 %arg1, %arg2
+  ret i32 %b
+}
+
+define void @main() {
+  %retVal = call i32 @func1(i32 10, i32 5, i32 10)
+  ret void
+}
+
+declare i64 @__backend_mov__(i64)

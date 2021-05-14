@@ -1,0 +1,5 @@
+start main 0:
+.entry:
+  ret 0 
+end main
+

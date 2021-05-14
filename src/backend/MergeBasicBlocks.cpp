@@ -1,4 +1,13 @@
-#include "MergeBasicBlocks.h"
+#include "../core/Team3Passes.h"
+#include "llvm/IR/PatternMatch.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "llvm/Transforms/Utils/Cloning.h"
+
+#include <vector>
+
+using namespace llvm;
+using namespace std;
+using namespace llvm::PatternMatch;
 
 namespace backend {
 PreservedAnalyses MergeBasicBlocksPass::run(Function& F, FunctionAnalysisManager& FAM) {
@@ -56,7 +65,6 @@ void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, Bas
       if (PN != nullptr) {
         Value *replacingVal = PN->getIncomingValueForBlock(BBPred);
         if (replacingVal != nullptr) {
-          //outs() << replacingVal->getName() << "\n";
           for (auto it = I.use_begin(), end = I.use_end(); it != end;) {
             Use &U = *it++;
             U.set(replacingVal);

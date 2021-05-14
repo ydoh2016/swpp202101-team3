@@ -1,6 +1,6 @@
 define i32 @func3(i32 %arg1, i32 %arg2) {
 ; CHECK: start func3 2
-; CHECK-NEXT: .bb_1:
+;CHECK-NEXT: [[DEFAULTBB:.[a-z0-9]+]]:
 ; CHECK-NEXT: [[COND1:r[0-9]+]] = icmp eq arg1 arg2 32
 ; CHECK-NEXT: [[A:r[0-9]+]] = add arg1 arg2 32
 ; CHECK-NEXT: [[B:r[0-9]+]] = sub arg1 arg2 32
