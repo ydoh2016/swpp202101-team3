@@ -14,7 +14,7 @@ for p in `ls -1 ./filechecks`; do
   echo "== Testing Optimizer ${p} =="
   for i in `find ./filechecks/${p} -name "*.ll"` ; do
     echo $i
-    timeout 60 bin/sf-compiler $i .tmp.s
+    timeout 60 bin/sf-compiler $i .tmp.s ${p}
 
     CODE=$?
 
