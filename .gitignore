@@ -40,3 +40,6 @@ bin
 
 # Editor
 .vscode
+
+# FileCheck output
+.tmp.s
