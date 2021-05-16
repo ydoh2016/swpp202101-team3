@@ -1,0 +1,2 @@
+bin/sf-compiler benchmarks/quick_sort/src/quick_sort.ll benchmarks/quick_sort/src/quick_sort.s adce debug1.txt
+bin/sf-compiler benchmarks/quick_sort/src/quick_sort.ll benchmarks/quick_sort/src/quick_sort.s mergebasicblocks debug2.txt
