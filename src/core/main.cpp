@@ -5,6 +5,7 @@
 #include "../backend/GEPUnpack.h"
 #include "../backend/RegisterSpill.h"
 #include "../backend/UnfoldVectorInst.h"
+#include "../backend/ConstantFolding.h"
 
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/Support/raw_ostream.h"
@@ -95,6 +96,7 @@ int main(int argc, char *argv[]) {
     //FPM.addPass(TailCallElimPass());
   
   FunctionPassManager FPM1;
+  FunctionPassManager FPM2;
   //add custom passes
   if(specificPass == "all" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
@@ -102,10 +104,15 @@ int main(int argc, char *argv[]) {
   //add Dead argument elimination
   if(specificPass == "all" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
+  
+  if(specificPass == "all" || specificPass == "constantfolding")  
+    FPM2.addPass(ConstantFolding());
+
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
