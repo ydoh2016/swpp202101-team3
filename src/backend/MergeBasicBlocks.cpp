@@ -42,37 +42,7 @@ PreservedAnalyses MergeBasicBlocksPass::run(Function& F, FunctionAnalysisManager
 
   // Get rid of dangling BBs.
   EliminateUnreachableBlocks(F);
-  // Finally, remove dangling phi nodes
-  removeDanglingPhi(&F);
-
   return PreservedAnalyses::all();
-}
-
-void MergeBasicBlocksPass::removeDanglingPhi(Function *F) {
-  vector<PHINode*> phisToRemove;
-  for (auto &BB : *F) {
-    for (auto &phi : BB.phis()) {
-      int incomingNum = phi.getNumIncomingValues();
-      for (int i = incomingNum - 1; i >= 0; --i) {
-        if (!phi.getIncomingBlock(i)->hasName()) {
-          phi.removeIncomingValue(i);
-        }
-      }
-
-      if(phi.getNumIncomingValues() == 1) {
-        phisToRemove.push_back(&phi);
-      }
-    }
-  }
-
-  for (PHINode *phi : phisToRemove) {
-    for (auto it = phi->use_begin(), end = phi->use_end(); it != end;) {
-      Use &U = *it++;
-      User *Usr = U.getUser();
-      U.set(phi->getIncomingValue(0));
-    }
-    phi->eraseFromParent();
-  }
 }
 
 void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc) {
@@ -81,6 +51,9 @@ void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, Bas
   if (DT.dominates(BBPred, BBSucc)) {
     MergeBlockIntoPredecessor(BBSucc);
   } else {
+    if (!BBSucc->phis().empty()) {
+      return;
+    }
     // Otherwise copy the successor and merge the copied one into the predecessor.
     ValueToValueMapTy VM;
     BasicBlock *BBDummy = CloneBasicBlock(BBSucc, VM, "", F);
@@ -99,28 +72,6 @@ void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, Bas
       }
     }
 
-    // Remove the phi incoming value from the BBPred
-    for (auto &phi : BBSucc->phis()) {
-      int idx = phi.getBasicBlockIndex(BBPred);
-      if (idx != -1) {
-        phi.removeIncomingValue(BBPred);
-      }
-    }
-
-    // Since the CloneBasicBlock function merely gets rid of phi nodes, replace 
-    // every phi node in the successor manually.
-    for (auto &I : *BBDummy) {
-      PHINode *PN = dyn_cast<PHINode>(&I);
-      if (PN != nullptr) {
-        Value *replacingVal = PN->getIncomingValueForBlock(BBPred);
-        if (replacingVal != nullptr) {
-          for (auto it = I.use_begin(), end = I.use_end(); it != end;) {
-            Use &U = *it++;
-            U.set(replacingVal);
-          }
-        }
-      }
-    }
     BranchInst *predBranchInst = dyn_cast<BranchInst>(BBPred->getTerminator());
     assert(predBranchInst != nullptr);
 
