@@ -1,2 +1,11 @@
-bin/sf-compiler benchmarks/quick_sort/src/quick_sort.ll benchmarks/quick_sort/src/quick_sort.s adce debug1.txt
-bin/sf-compiler benchmarks/quick_sort/src/quick_sort.ll benchmarks/quick_sort/src/quick_sort.s mergebasicblocks debug2.txt
+bin/sf-compiler benchmarks/quick_sort/src/quick_sort.ll benchmarks/quick_sort/src/quick_sort.s
+bin/sf-interpreter benchmarks/quick_sort/src/quick_sort.s < benchmarks/quick_sort/test/input5.txt
+
+bin/sf-compiler benchmarks/bitcount1/src/bitcount1.ll benchmarks/quick_sort/src/bitcount1.s
+bin/sf-interpreter benchmarks/bitcount1/src/bitcount1.s < benchmarks/bitcount1/test/input5.txt
+
+bin/sf-compiler benchmarks/bitcount2/src/bitcount2.ll benchmarks/bitcount2/src/bitcount2.s
+bin/sf-interpreter benchmarks/bitcount2/src/bitcount2.s < benchmarks/bitcount2/test/input5.txt
+
+
+bin/sf-compiler benchmarks/collatz/src/collatz.ll benchmarks/collatz/src/collatz.s

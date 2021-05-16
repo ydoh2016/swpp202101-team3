@@ -99,6 +99,14 @@ void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, Bas
       }
     }
 
+    // Remove the phi incoming value from the BBPred
+    for (auto &phi : BBSucc->phis()) {
+      int idx = phi.getBasicBlockIndex(BBPred);
+      if (idx != -1) {
+        phi.removeIncomingValue(BBPred);
+      }
+    }
+
     // Since the CloneBasicBlock function merely gets rid of phi nodes, replace 
     // every phi node in the successor manually.
     for (auto &I : *BBDummy) {
