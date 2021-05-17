@@ -56,6 +56,8 @@ TEST(InstructionRedundancyTest, MergeBlock1) {
   SMDiagnostic Error;
   unique_ptr<Module> M = parseAssemblyFile("./filechecks/MergeBasicBlocks/check1.ll", Error, Context);
   ASSERT_TRUE(M);
+
+  
 }
 
 int main(int argc, char **argv) {

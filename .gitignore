@@ -36,7 +36,8 @@ Makefile
 
 # Object and Binary files
 obj
-bin
+bin/sf-compiler
+bin/sf-compiler-tests
 
 # Editor
 .vscode
