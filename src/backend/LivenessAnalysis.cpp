@@ -137,14 +137,22 @@ vector<vector<bool>> RegisterGraph::LiveInterval(Module &M)
             //Vector for storing liveness after terminator, before successor
             map<unsigned,bool> Dead;
 
+            dbgs() << "F: " << F.getName() << "\n";
+            dbgs() << "BB: " << BB.getName() << "\n";
             for(BasicBlock* succ : successors(&BB)) {
                 for(PHINode& phi : succ->phis()) {
+                    dbgs() << "SUCC: " << succ->getName() << "\n";
+                    int idx = phi.getNumIncomingValues();
+                    for (int i = 0; i < idx; ++i) {
+                        dbgs() << "PHI: " << phi.getIncomingBlock(i)->getName() << "\n";
+                    }
                     Value* incomeV = phi.getIncomingValueForBlock(&BB);
                     unsigned fv = findValue(incomeV);
                     if (fv != -1)
                         Dead[fv] = true;
                 }
             }
+            dbgs() << "\n";
 
             for(BasicBlock* succ : successors(&BB)) {
                 // int phinum = NumPhi[succ];

@@ -21,6 +21,7 @@ private:
   pair<BasicBlock *, BasicBlock *> classifyMergeType(BasicBlock *BB);
   void mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc);
   void removeDanglingPhi(Function *F);
+  bool hasPhi(BasicBlock *BB);
 public:
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
 };

@@ -91,9 +91,9 @@ int main(int argc, char *argv[]) {
   //add Loop invariant code motion
   if(specificPass == "all" || specificPass == "licm")  
     FPM.addPass(createFunctionToLoopPassAdaptor(LICMPass()));
-  //add  Tail call elimination
-  //if(specificPass == "all" || specificPass == "tailcallelim")  
-    //FPM.addPass(TailCallElimPass());
+  //add Tail call elimination
+  if(specificPass == "all" || specificPass == "tailcallelim")  
+    FPM.addPass(TailCallElimPass());
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;

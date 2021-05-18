@@ -18,3 +18,6 @@ bin/sf-interpreter benchmarks/radix_sort/src/radix_sort.s < benchmarks/radix_sor
 
 bin/sf-compiler benchmarks/prime/src/prime.ll benchmarks/prime/src/prime.s
 bin/sf-interpreter benchmarks/prime/src/prime.s < benchmarks/prime/test/input6.txt
+
+bin/sf-compiler benchmarks/bubble_sort/src/bubble_sort.ll benchmarks/bubble_sort/src/bubble_sort.s
+bin/sf-interpreter benchmarks/bubble_sort/src/bubble_sort.s < benchmarks/bubble_sort/test/input6.txt
