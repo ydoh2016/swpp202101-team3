@@ -7,6 +7,7 @@
 #include "../backend/UnfoldVectorInst.h"
 #include "../backend/ConstantFolding.h"
 
+#include "llvm/Support/CommandLine.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/raw_os_ostream.h"
@@ -36,16 +37,32 @@ using namespace backend;
 //Currently adce, dae, licm, simplifyCFG, tailCallElim supported
 //outputDbgfile is optimized ir file.
 
+static cl::opt<string> optInput(
+    cl::Positional, cl::desc("<input bitcode file>"), cl::Required,
+    cl::value_desc("filename"));
+
+static cl::opt<string> optOutput(
+    cl::Positional, cl::desc("<output assembly file>"), cl::value_desc("filename"),
+    cl::init(""));
+
+static cl::opt<string> specificPass(
+    cl::Positional, cl::desc("<select specific pass>"), cl::value_desc("pass_name"),
+    cl::init(""));
+
+cl::opt<string> outputDbg ("debug-file", cl::value_desc("filename"), cl::desc("make debug file in <filename>"));
+
 int main(int argc, char *argv[]) {
   //Parse command line arguments
-  if(argc < 3) return -1;
-  string optInput = argv[1];
-  string optOutput = argv[2];
-  string specificPass = argc > 3 ? argv[3] : "all";
-  string outputDbg = argc > 4 ? argv[4] : "no";
-  std::transform(specificPass.begin(), specificPass.end(),specificPass.begin(), ::tolower);
-  
+  cl::ParseCommandLineOptions(argc, argv);
+  if (optOutput == "")
+      optOutput = ".tmp.s";
+  if (specificPass == "")
+      specificPass = "all";
+  if (outputDbg == "")
+      outputDbg = "no";
   bool optPrintProgress = false;
+
+  std::transform(specificPass.begin(), specificPass.end(),specificPass.begin(), ::tolower);
 
   //Parse input LLVM IR module
   LLVMContext Context;
@@ -99,8 +116,8 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   //add custom passes
-  if(specificPass == "all" || specificPass == "mergebasicblocks")
-    FPM1.addPass(MergeBasicBlocksPass());
+  // if(specificPass == "all" || specificPass == "mergebasicblocks")
+  //   FPM1.addPass(MergeBasicBlocksPass());
 
   if(specificPass == "all" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
@@ -111,7 +128,7 @@ int main(int argc, char *argv[]) {
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  // MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   
   MPM.run(*M, MAM);
