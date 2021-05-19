@@ -49,6 +49,7 @@ PreservedAnalyses MergeBasicBlocksPass::run(Function& F, FunctionAnalysisManager
   return PreservedAnalyses::all();
 }
 
+// Remove phis that are referring to deleted basic blocks
 void MergeBasicBlocksPass::removeDanglingPhi(Function *F) {
   vector<PHINode*> phisToRemove;
   for (auto &BB : *F) {
@@ -60,12 +61,14 @@ void MergeBasicBlocksPass::removeDanglingPhi(Function *F) {
         }
       }
 
+      // Delete a phi node if it has only one incoming value
       if(phi.getNumIncomingValues() == 1) {
         phisToRemove.push_back(&phi);
       }
     }
   }
 
+  // Replace the phi node uses with its unique incoming value
   for (PHINode *phi : phisToRemove) {
     for (auto it = phi->use_begin(), end = phi->use_end(); it != end;) {
       Use &U = *it++;
