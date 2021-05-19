@@ -91,9 +91,10 @@ int main(int argc, char *argv[]) {
   //add Loop invariant code motion
   if(specificPass == "all" || specificPass == "licm")  
     FPM.addPass(createFunctionToLoopPassAdaptor(LICMPass()));
-  //add Tail call elimination
+  //add  Tail call elimination
   if(specificPass == "all" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
+  //add Dead argument elimination
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
@@ -101,7 +102,6 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
 
-  //add Dead argument elimination
   if(specificPass == "all" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
@@ -116,6 +116,7 @@ int main(int argc, char *argv[]) {
   
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
+
   UnfoldVectorInstPass().run(*M, MAM);
   LivenessAnalysis().run(*M, MAM);
   SpillCostAnalysis().run(*M, MAM);
@@ -135,6 +136,6 @@ int main(int argc, char *argv[]) {
   // execute backend to emit assembly
   Backend B(optOutput, optPrintProgress);
   B.run(*M, MAM);
-
+  
   return 0;
 }
