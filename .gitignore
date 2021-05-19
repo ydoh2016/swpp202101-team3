@@ -39,6 +39,9 @@ obj
 bin/sf-compiler
 bin/sf-compiler-tests
 
+# assembly files
+*.s
+
 # Editor
 .vscode
 
