@@ -192,8 +192,9 @@ void AbbrMemPass::insertFunctionCall(const vector<vector<Instruction*>> &sequenc
             if (sequence[i] != nullptr) {
                 auto VIdx = ConstantInt::get(Type::getInt64Ty(BB->getContext()), i);
                 vector<Value*> extract8Args = {vload8Call, VIdx};
-                auto extract8Call = CallInst::Create(extract8ty, extract8, extract8Args, "");
-                ReplaceInstWithInst(sequence[i], extract8Call);
+                auto extract8Call = CallInst::Create(extract8ty, extract8, extract8Args, "", start);
+                //ReplaceInstWithInst(sequence[i], extract8Call);
+                sequence[i]->replaceAllUsesWith(extract8Call);
             }
         }
     }
@@ -234,6 +235,6 @@ PreservedAnalyses AbbrMemPass::run(Module& M, ModuleAnalysisManager& MAM) {
         }
     }
     
-    return PreservedAnalyses::all();
+    return PreservedAnalyses::none();
 }
 }
