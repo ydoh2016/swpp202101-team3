@@ -126,7 +126,11 @@ void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, Bas
       if (incomingIdx != -1) {
         Value *incomingVal = phi.getIncomingValue(incomingIdx);
         Value *replacingVal = VM[incomingVal];
-        phi.addIncoming(replacingVal, BBPred);
+        if (replacingVal) {
+          phi.addIncoming(replacingVal, BBPred);
+        } else {
+          phi.addIncoming(incomingVal, BBPred);
+        }
       }
     }
   }
