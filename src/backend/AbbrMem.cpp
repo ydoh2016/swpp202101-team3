@@ -12,8 +12,9 @@ using namespace std;
 using namespace llvm::PatternMatch;
 
 namespace backend {
-int AbbrMemPass::MAXSEQ = 8;
+int AbbrMemPass::MAXSEQ = 8; // How many elements to deal with at once
 
+// Get instructions with a certain operation
 void AbbrMemPass::getInst(BasicBlock *BB, unsigned opcode, vector<Instruction*> *instList) {
     for (auto &I : *BB) {
         if (I.getOpcode() == opcode) {
@@ -22,15 +23,16 @@ void AbbrMemPass::getInst(BasicBlock *BB, unsigned opcode, vector<Instruction*> 
     }
 }
 
+// Get sequential memory access
 void AbbrMemPass::getSequences(const vector<Instruction*> &instList, vector<vector<Instruction*>> *sequences) {
     vector<Instruction*> sequence; // A sequence consists of elements in a memory in a row
     int sz = instList.size();
     vector<bool> isRemaining(sz, true); // To prevent repetitive sequences
 
-    // Combine each sequence into a vector and push into the sequences vector
+    // Combine each sequence into a vector then push into the sequences vector
     for (int i = 0; i < sz; ++i) {
-        if (!isRemaining[i]) {
-            continue;
+        if (!isRemaining[i]) { // If the instruction has been accessed
+            continue; // Skip this instruction
         }
 
         Instruction *I1 = instList[i];
@@ -44,7 +46,9 @@ void AbbrMemPass::getSequences(const vector<Instruction*> &instList, vector<vect
             Instruction *I2 = instList[j];
             int i = 0;
             int *diff = &i;
+            // Are these two instructions in sequence?
             bool isSequence = inSameSequence(I1, I2, diff);
+            // If they are in a row and their difference is less than MAXSEQ
             if (isSequence && *diff < MAXSEQ) {
                 sequence[*diff] = I2;
                 isRemaining[j] = false;
@@ -52,20 +56,25 @@ void AbbrMemPass::getSequences(const vector<Instruction*> &instList, vector<vect
                 continue;
             }
         }
-
+        
+        // Determine as a sequence only if if has more than one instruction
+        // in each vector
         if (count(sequence.begin(), sequence.end(), nullptr) <= MAXSEQ - 2) {
             sequences->push_back(sequence);
         }
     }
 }
 
+// Recursively check if two values are identical
 bool AbbrMemPass::isIdentical(Value *V1, Value *V2) {
+    // If both are constants, answer: are their values equal?
     if (isa<ConstantInt>(V1) && isa<ConstantInt>(V2)) {
         ConstantInt *C1 = dyn_cast<ConstantInt>(V1);
         ConstantInt *C2 = dyn_cast<ConstantInt>(V2);
         return C1->getZExtValue() == C2->getZExtValue();
     }
-
+    
+    // If both have the same name, they're equal at least in a same BB
     if (V1->getName() == V2->getName()) {
         return true;
     }
@@ -79,6 +88,7 @@ bool AbbrMemPass::isIdentical(Value *V1, Value *V2) {
         if (I1->getOpcode() == Instruction::PHI) {
             return false;
         }
+        // Recursively check equivalence for each operand
         bool result = true;
         int count = I1->getNumOperands();
         for (int i = 0; i < count; ++i) {
@@ -92,8 +102,9 @@ bool AbbrMemPass::isIdentical(Value *V1, Value *V2) {
     }
 }
 
+// Check if the two values are in sequence. If so, get their gap.
 bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
-    // Load instructions
+    // load instructions
     auto I1 = dyn_cast<Instruction>(V1);
     auto I2 = dyn_cast<Instruction>(V2);
 
@@ -104,7 +115,8 @@ bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
     // The pointer from each getelementptr
     auto P1 = GP1->getOperand(0);
     auto P2 = GP2->getOperand(0);
-    // They should be the same
+
+    // Are the pointers same?
     if (P1 != P2) { 
         return false;
     }
@@ -113,6 +125,7 @@ bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
     auto IDX1 = GP1->getOperand(1);
     auto IDX2 = GP2->getOperand(1);
 
+    // If they are both constants, they are in sequence
     if (isa<ConstantInt>(IDX1) && isa<ConstantInt>(IDX2)) {
         *difference = dyn_cast<ConstantInt>(IDX2)->getZExtValue() - 
         dyn_cast<ConstantInt>(IDX1)->getZExtValue();
@@ -121,10 +134,12 @@ bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
 
     auto INST1 = dyn_cast<Instruction>(IDX1);
     auto INST2 = dyn_cast<Instruction>(IDX2);
+
     if (!INST1 || !INST2) {
         return false;
     }
 
+    // If there are ZExt of SExt, assign their operands to INST1 to skip them
     if (INST1->getOpcode() == Instruction::ZExt || 
         INST1->getOpcode() == Instruction::SExt) {
         INST1 = dyn_cast<Instruction>(INST1->getOperand(0));
@@ -133,11 +148,13 @@ bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
         INST2->getOpcode() == Instruction::SExt) {
         INST2 = dyn_cast<Instruction>(INST2->getOperand(0));
     }
+
     // Operands of addition
     Value *ADD1;
     Value *ADD2;
     ConstantInt *C1;
     ConstantInt *C2;
+    // If the operation is not in a form of 'val + constant', return
     if (!match(INST1, m_Add(m_ConstantInt(C1), m_Value(ADD1))) &&
         !match(INST1, m_Add(m_Value(ADD1), m_ConstantInt(C1)))) {
          return false;
@@ -156,6 +173,7 @@ bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
     return true;
 }
 
+// Get suitable mask.
 int AbbrMemPass::getMask(const vector<Instruction*> &sequence) {
     int mask = 0;
     int sz = sequence.size();
@@ -184,7 +202,6 @@ void AbbrMemPass::insertFunctionCall(const vector<vector<Instruction*>> &sequenc
 
     for (auto &sequence : sequences) {
         Instruction *start = sequence[0];
-        // Implement the mask
         auto VMask = ConstantInt::get(Type::getInt64Ty(BB->getContext()), getMask(sequence));
         vector<Value*> vload8Args = {start->getOperand(0), VMask};
         Instruction *vload8Call = CallInst::Create(vload8ty, vload8, vload8Args, "", start);
@@ -192,21 +209,27 @@ void AbbrMemPass::insertFunctionCall(const vector<vector<Instruction*>> &sequenc
             if (sequence[i] != nullptr) {
                 auto VIdx = ConstantInt::get(Type::getInt64Ty(BB->getContext()), i);
                 vector<Value*> extract8Args = {vload8Call, VIdx};
-                auto extract8Call = CallInst::Create(extract8ty, extract8, extract8Args, "", start);
-                //ReplaceInstWithInst(sequence[i], extract8Call);
+                auto extract8Call = CallInst::Create(extract8ty, extract8, 
+                                                     extract8Args, "", start);
                 sequence[i]->replaceAllUsesWith(extract8Call);
             }
         }
     }
 }
 
-
+// Try to optimize each block
 void AbbrMemPass::processBasicBlock(BasicBlock *BB) {
     vector<Instruction*> loads;
     vector<vector<Instruction*>> loadSequences;
     getInst(BB, Instruction::Load, &loads);
     getSequences(loads, &loadSequences);
     insertFunctionCall(loadSequences, BB);
+
+    vector<Instruction*> stores;
+    vector<vector<Instruction*>> storeSequences;
+    getInst(BB, Instruction::Store, &stores);
+    getSequences(stores, &loadSequences);
+    insertFunctionCall(storeSequences, BB);
 }
 
 // Declare vector memory access functions
@@ -215,26 +238,30 @@ void AbbrMemPass::addDeclarations(Module *M) {
     auto int64PtrType = Type::getInt64PtrTy(mContext);
     auto int64Type = Type::getInt64Ty(mContext);
     auto int64VectorType = VectorType::get(int64Type, 8, false);
+    auto voidType = Type::getVoidTy(mContext);
 
-    vector<Type*> vload8Args = {int64PtrType, int64Type}; // Pointer from which we retrieve an element / mask
+    vector<Type*> vload8Args = {int64PtrType, int64Type}; 
     auto vload8ty = FunctionType::get(int64VectorType, vload8Args, false); 
     auto vload8 = Function::Create(vload8ty, Function::ExternalLinkage, "vload8", M);
 
     vector<Type*> extract8Args = {int64VectorType, int64Type};
     auto extract8ty = FunctionType::get(int64Type, extract8Args, false); 
     auto extract8 = Function::Create(extract8ty, Function::ExternalLinkage, "extract_element8", M);
-}
 
+    vector<Type*> vstore8Args = {int64Type, int64Type, int64Type, int64Type,
+                                 int64Type, int64Type, int64Type, int64Type,
+                                 int64PtrType, int64Type};
+    auto vstore8ty = FunctionType::get(voidType, vstore8Args, false); 
+    auto vstore8 = Function::Create(vstore8ty, Function::ExternalLinkage, "vstore8", M);
+}
 
 PreservedAnalyses AbbrMemPass::run(Module& M, ModuleAnalysisManager& MAM) {
     addDeclarations(&M);
-
     for (auto &F : M) {
         for (auto &BB : F) {
             processBasicBlock(&BB);
         }
     }
-    
     return PreservedAnalyses::none();
 }
 }
