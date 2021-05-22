@@ -104,14 +104,12 @@ int main(int argc, char *argv[]) {
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
-  if(specificPass == "all" || specificPass == "gvn")
-    FPM.addPass(GVN());
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   //add custom passes
-  // if(specificPass == "all" || specificPass == "mergebasicblocks")
-  //   FPM1.addPass(MergeBasicBlocksPass());
+  if(specificPass == "all" || specificPass == "mergebasicblocks")
+    FPM1.addPass(MergeBasicBlocksPass());
 
   //add Dead argument elimination
   if(specificPass == "all" || specificPass == "dae")  
@@ -120,12 +118,9 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
-  if (specificPass == "all" || specificPass == "abbrmem")
-    MPM.addPass(AbbrMemPass());
-
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  // MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   
   MPM.run(*M, MAM);

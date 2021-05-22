@@ -1,0 +1,1388 @@
+{
+  "no": {
+    "binary_tree": {
+      "input1": 981.8,
+      "input2": 1874.6,
+      "input3": 25253.8,
+      "input4": 341853.1,
+      "input5": 62735852.5,
+      "input6": 1580.9,
+      "input7": 11514.9
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 86.2,
+      "input2": 539.8,
+      "input3": 153.4,
+      "input4": 19,
+      "input5": 35.8,
+      "input6": 472.6,
+      "input7": 523
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15342.7,
+      "input2": 15333,
+      "input3": 15346.1,
+      "input4": 15361.8,
+      "input5": 15361.8,
+      "input6": 15304.6,
+      "input7": 15304.6
+    },
+    "bitcount5": {
+      "input1": 340.9,
+      "input2": 661.2,
+      "input3": 385.3,
+      "input4": 306.2,
+      "input5": 347.3,
+      "input6": 556,
+      "input7": 583.3
+    },
+    "bubble_sort": {
+      "input1": 4278.2,
+      "input2": 409818.6,
+      "input3": 42704405.1004,
+      "input4": 9,
+      "input5": 415103.9,
+      "input6": 3868994.5,
+      "input7": 4277937108.927
+    },
+    "collatz": {
+      "input1": 40.3,
+      "input2": 40.3,
+      "input3": 1797.2,
+      "input4": 1321,
+      "input5": 844.8,
+      "input6": 1892.4,
+      "input7": 2368.5
+    },
+    "gcd": {
+      "input1": 22,
+      "input2": 39,
+      "input3": 76,
+      "input4": 336,
+      "input5": 113,
+      "input6": 57,
+      "input7": 188
+    },
+    "jenkins_hash": {
+      "input1": 12,
+      "input2": 933.6,
+      "input3": 5946.9,
+      "input4": 14025.7,
+      "input5": 55287.7,
+      "input6": 165205.2,
+      "input7": 550043.7,
+      "input8": 1649218.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 11,
+      "input2": 3009.7,
+      "input3": 141925.3,
+      "input4": 8542395.7001,
+      "input5": 32345565.998,
+      "input6": 257067068.3549,
+      "input7": 865704822.3766,
+      "input8": 32345565.998
+    },
+    "matmul4": {
+      "input1": 11,
+      "input2": 8141.2,
+      "input3": 466384.8,
+      "input4": 29303047.2,
+      "input5": 111540954,
+      "input6": 890629644.0032,
+      "input7": 3003978333.9665,
+      "input8": 111540954
+    },
+    "merge_sort": {
+      "input1": 6355.5,
+      "input2": 114575.3,
+      "input3": 1654886.3,
+      "input4": 21771447.6,
+      "input5": 114167.2,
+      "input6": 415687.1
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4428.9,
+      "input2": 78873.2,
+      "input3": 1216929.2,
+      "input4": 15806132.2,
+      "input5": 77161.8,
+      "input6": 285604.5
+    },
+    "radix_sort": {
+      "input1": 9918.1,
+      "input2": 143860.6,
+      "input3": 1375063,
+      "input4": 29684644.5001,
+      "input5": 308806,
+      "input6": 902891.5
+    },
+    "rmq1d_naive": {
+      "input1": 143.3,
+      "input2": 1489,
+      "input3": 2320,
+      "input4": 2847.2,
+      "input5": 1155767.6,
+      "input6": 5254163.1,
+      "input7": 999455024.1
+    },
+    "rmq1d_sparsetable": {
+      "input1": 1135.6,
+      "input2": 10382.5,
+      "input3": 15269.5,
+      "input4": 14200,
+      "input5": 914345.8,
+      "input6": 1608210,
+      "input7": 34174183.4996
+    },
+    "rmq2d_naive": {
+      "input1": 288.9,
+      "input2": 2936.6,
+      "input3": 26104.4,
+      "input4": 18347.6,
+      "input5": 10135657.9
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4034.6,
+      "input2": 24961.3,
+      "input3": 139412.3,
+      "input4": 195110.1,
+      "input5": 114695970.0028
+    }
+  },
+  "all": {
+    "binary_tree": {
+      "input1": 971.2,
+      "input2": 1863.9,
+      "input3": 25207.6,
+      "input4": 341555.7,
+      "input5": 62742500,
+      "input6": 1568.9,
+      "input7": 11512.6
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 78.4,
+      "input2": 451,
+      "input3": 133.6,
+      "input4": 23.2,
+      "input5": 37,
+      "input6": 395.8,
+      "input7": 437.2
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15341.7,
+      "input2": 15332.2,
+      "input3": 15345.2,
+      "input4": 15360.8,
+      "input5": 15360.8,
+      "input6": 15303.6,
+      "input7": 15303.6
+    },
+    "bitcount5": {
+      "input1": 341.8,
+      "input2": 638.7,
+      "input3": 382.8,
+      "input4": 310.4,
+      "input5": 348.1,
+      "input6": 536.2,
+      "input7": 561.6
+    },
+    "bubble_sort": {
+      "input1": 4274.7,
+      "input2": 409814.7,
+      "input3": 42704401.2004,
+      "input4": 8,
+      "input5": 415100,
+      "input6": 3868990.6,
+      "input7": 4277937105.027
+    },
+    "collatz": {
+      "input1": 42.1,
+      "input2": 42.1,
+      "input3": 1705.9,
+      "input4": 1254.2,
+      "input5": 802.5,
+      "input6": 1796.2,
+      "input7": 2247.8
+    },
+    "gcd": {
+      "input1": 25,
+      "input2": 38,
+      "input3": 67,
+      "input4": 271,
+      "input5": 96,
+      "input6": 52,
+      "input7": 155
+    },
+    "jenkins_hash": {
+      "input1": 11,
+      "input2": 930.7,
+      "input3": 5944,
+      "input4": 14022.7,
+      "input5": 55284.7,
+      "input6": 165202.2,
+      "input7": 550040.7,
+      "input8": 1649215.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 10,
+      "input2": 3008.7,
+      "input3": 141924.3,
+      "input4": 8542394.7001,
+      "input5": 32345564.998,
+      "input6": 257067067.3549,
+      "input7": 865704821.3766,
+      "input8": 32345564.998
+    },
+    "matmul4": {
+      "input1": 10,
+      "input2": 8140.2,
+      "input3": 466383.8,
+      "input4": 29303046.2,
+      "input5": 111540953,
+      "input6": 890629643.0032,
+      "input7": 3003978332.9665,
+      "input8": 111540953
+    },
+    "merge_sort": {
+      "input1": 6345.3,
+      "input2": 114483.1,
+      "input3": 1653953.8,
+      "input4": 21762151.4,
+      "input5": 114075,
+      "input6": 415407.7
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4403,
+      "input2": 78593.1,
+      "input3": 1214097.5,
+      "input4": 15778139.1,
+      "input5": 76881.4,
+      "input6": 284760.5
+    },
+    "radix_sort": {
+      "input1": 9914.6,
+      "input2": 143856.6,
+      "input3": 1375059,
+      "input4": 29684640.5001,
+      "input5": 308802,
+      "input6": 902887.5
+    },
+    "rmq1d_naive": {
+      "input1": 902887.5,
+      "input2": 902887.5,
+      "input3": 902887.5,
+      "input4": 902887.5,
+      "input5": 902887.5,
+      "input6": 902887.5,
+      "input7": 902887.5
+    },
+    "rmq1d_sparsetable": {
+      "input1": 902887.5,
+      "input2": 902887.5,
+      "input3": 902887.5,
+      "input4": 902887.5,
+      "input5": 902887.5,
+      "input6": 902887.5,
+      "input7": 902887.5
+    },
+    "rmq2d_naive": {
+      "input1": 902887.5,
+      "input2": 902887.5,
+      "input3": 902887.5,
+      "input4": 902887.5,
+      "input5": 902887.5
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4024.7,
+      "input2": 12241.2,
+      "input3": 21828.6,
+      "input4": 190980.5,
+      "input5": 114695484.1028
+    }
+  },
+  "ConstantFolding": {
+    "binary_tree": {
+      "input1": 981.8,
+      "input2": 1874.6,
+      "input3": 25253.8,
+      "input4": 341853.1,
+      "input5": 62735852.5,
+      "input6": 1580.9,
+      "input7": 11514.9
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 86.2,
+      "input2": 539.8,
+      "input3": 153.4,
+      "input4": 19,
+      "input5": 35.8,
+      "input6": 472.6,
+      "input7": 523
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15342.7,
+      "input2": 15333,
+      "input3": 15346.1,
+      "input4": 15361.8,
+      "input5": 15361.8,
+      "input6": 15304.6,
+      "input7": 15304.6
+    },
+    "bitcount5": {
+      "input1": 340.9,
+      "input2": 661.2,
+      "input3": 385.3,
+      "input4": 306.2,
+      "input5": 347.3,
+      "input6": 556,
+      "input7": 583.3
+    },
+    "bubble_sort": {
+      "input1": 4278.2,
+      "input2": 409818.6,
+      "input3": 42704405.1004,
+      "input4": 9,
+      "input5": 415103.9,
+      "input6": 3868994.5,
+      "input7": 4277937108.927
+    },
+    "collatz": {
+      "input1": 40.3,
+      "input2": 40.3,
+      "input3": 1797.2,
+      "input4": 1321,
+      "input5": 844.8,
+      "input6": 1892.4,
+      "input7": 2368.5
+    },
+    "gcd": {
+      "input1": 22,
+      "input2": 39,
+      "input3": 76,
+      "input4": 336,
+      "input5": 113,
+      "input6": 57,
+      "input7": 188
+    },
+    "jenkins_hash": {
+      "input1": 12,
+      "input2": 933.6,
+      "input3": 5946.9,
+      "input4": 14025.7,
+      "input5": 55287.7,
+      "input6": 165205.2,
+      "input7": 550043.7,
+      "input8": 1649218.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 11,
+      "input2": 3009.7,
+      "input3": 141925.3,
+      "input4": 8542395.7001,
+      "input5": 32345565.998,
+      "input6": 257067068.3549,
+      "input7": 865704822.3766,
+      "input8": 32345565.998
+    },
+    "matmul4": {
+      "input1": 11,
+      "input2": 8141.2,
+      "input3": 466384.8,
+      "input4": 29303047.2,
+      "input5": 111540954,
+      "input6": 890629644.0032,
+      "input7": 3003978333.9665,
+      "input8": 111540954
+    },
+    "merge_sort": {
+      "input1": 6355.5,
+      "input2": 114575.3,
+      "input3": 1654886.3,
+      "input4": 21771447.6,
+      "input5": 114167.2,
+      "input6": 415687.1
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4428.9,
+      "input2": 78873.2,
+      "input3": 1216929.2,
+      "input4": 15806132.2,
+      "input5": 77161.8,
+      "input6": 285604.5
+    },
+    "radix_sort": {
+      "input1": 9918.1,
+      "input2": 143860.6,
+      "input3": 1375063,
+      "input4": 29684644.5001,
+      "input5": 308806,
+      "input6": 902891.5
+    },
+    "rmq1d_naive": {
+      "input1": 143.3,
+      "input2": 1489,
+      "input3": 2320,
+      "input4": 2847.2,
+      "input5": 1155767.6,
+      "input6": 5254163.1,
+      "input7": 999455024.1
+    },
+    "rmq1d_sparsetable": {
+      "input1": 1134.8,
+      "input2": 10369.6,
+      "input3": 15252.1,
+      "input4": 14152.4,
+      "input5": 913315.3,
+      "input6": 1600881.9,
+      "input7": 33940410.2992
+    },
+    "rmq2d_naive": {
+      "input1": 288.9,
+      "input2": 2936.6,
+      "input3": 26104.4,
+      "input4": 18347.6,
+      "input5": 10135657.9
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4034.6,
+      "input2": 24961.3,
+      "input3": 139412.3,
+      "input4": 195110.1,
+      "input5": 114695970.0028
+    }
+  },
+  "MergeBasicBlocks": {
+    "binary_tree": {
+      "input1": 968,
+      "input2": 1861.1,
+      "input3": 25191,
+      "input4": 341343.5,
+      "input5": 62709630,
+      "input6": 1567.7,
+      "input7": 11511.2
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 86.2,
+      "input2": 539.8,
+      "input3": 153.4,
+      "input4": 19,
+      "input5": 35.8,
+      "input6": 472.6,
+      "input7": 523
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15341.7,
+      "input2": 15332.2,
+      "input3": 15345.2,
+      "input4": 15360.8,
+      "input5": 15360.8,
+      "input6": 15303.6,
+      "input7": 15303.6
+    },
+    "bitcount5": {
+      "input1": 340.9,
+      "input2": 661.2,
+      "input3": 385.3,
+      "input4": 306.2,
+      "input5": 347.3,
+      "input6": 556,
+      "input7": 583.3
+    },
+    "bubble_sort": {
+      "input1": 4274.7,
+      "input2": 409814.7,
+      "input3": 42704401.2004,
+      "input4": 8,
+      "input5": 415100,
+      "input6": 3868990.6,
+      "input7": 4277937105.027
+    },
+    "collatz": {
+      "input1": 40.3,
+      "input2": 40.3,
+      "input3": 1797.2,
+      "input4": 1321,
+      "input5": 844.8,
+      "input6": 1892.4,
+      "input7": 2368.5
+    },
+    "gcd": {
+      "input1": 22,
+      "input2": 39,
+      "input3": 76,
+      "input4": 336,
+      "input5": 113,
+      "input6": 57,
+      "input7": 188
+    },
+    "jenkins_hash": {
+      "input1": 11,
+      "input2": 930.7,
+      "input3": 5944,
+      "input4": 14022.7,
+      "input5": 55284.7,
+      "input6": 165202.2,
+      "input7": 550040.7,
+      "input8": 1649215.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 10,
+      "input2": 3106.2,
+      "input3": 143228.6,
+      "input4": 8618694.2001,
+      "input5": 32636303.8979,
+      "input6": 259392181.2567,
+      "input7": 873551810.2558,
+      "input8": 32636303.8979
+    },
+    "matmul4": {
+      "input1": 10,
+      "input2": 8140.2,
+      "input3": 466383.8,
+      "input4": 29303046.2,
+      "input5": 111540953,
+      "input6": 890629643.0032,
+      "input7": 3003978332.9665,
+      "input8": 111540953
+    },
+    "merge_sort": {
+      "input1": 6345.3,
+      "input2": 114483.1,
+      "input3": 1653953.8,
+      "input4": 21762151.4,
+      "input5": 114075,
+      "input6": 415407.7
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4418,
+      "input2": 78755,
+      "input3": 1215746.5,
+      "input4": 15794472.1,
+      "input5": 77044.7,
+      "input6": 285252.3
+    },
+    "radix_sort": {
+      "input1": 9914.6,
+      "input2": 143856.6,
+      "input3": 1375059,
+      "input4": 29684640.5001,
+      "input5": 308802,
+      "input6": 902887.5
+    },
+    "rmq1d_naive": {
+      "input1": 902887.5,
+      "input2": 902887.5,
+      "input3": 902887.5,
+      "input4": 902887.5,
+      "input5": 902887.5,
+      "input6": 902887.5,
+      "input7": 902887.5
+    },
+    "rmq1d_sparsetable": {
+      "input1": 902887.5,
+      "input2": 902887.5,
+      "input3": 902887.5,
+      "input4": 902887.5,
+      "input5": 902887.5,
+      "input6": 902887.5,
+      "input7": 902887.5
+    },
+    "rmq2d_naive": {
+      "input1": 148.2,
+      "input2": 1060.1,
+      "input3": 1688.1,
+      "input4": 13457.5,
+      "input5": 10098331.4
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4024.7,
+      "input2": 12241.2,
+      "input3": 21828.6,
+      "input4": 190980.5,
+      "input5": 114695484.1028
+    }
+  },
+  "TailCallElimPass": {
+    "binary_tree": {
+      "input1": 981.8,
+      "input2": 1874.6,
+      "input3": 25253.8,
+      "input4": 341853.1,
+      "input5": 62735852.5,
+      "input6": 1580.9,
+      "input7": 11514.9
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 86.2,
+      "input2": 539.8,
+      "input3": 153.4,
+      "input4": 19,
+      "input5": 35.8,
+      "input6": 472.6,
+      "input7": 523
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15342.7,
+      "input2": 15333,
+      "input3": 15346.1,
+      "input4": 15361.8,
+      "input5": 15361.8,
+      "input6": 15304.6,
+      "input7": 15304.6
+    },
+    "bitcount5": {
+      "input1": 340.9,
+      "input2": 661.2,
+      "input3": 385.3,
+      "input4": 306.2,
+      "input5": 347.3,
+      "input6": 556,
+      "input7": 583.3
+    },
+    "bubble_sort": {
+      "input1": 4278.2,
+      "input2": 409818.6,
+      "input3": 42704405.1004,
+      "input4": 9,
+      "input5": 415103.9,
+      "input6": 3868994.5,
+      "input7": 4277937108.927
+    },
+    "collatz": {
+      "input1": 40.3,
+      "input2": 40.3,
+      "input3": 1797.2,
+      "input4": 1321,
+      "input5": 844.8,
+      "input6": 1892.4,
+      "input7": 2368.5
+    },
+    "gcd": {
+      "input1": 22,
+      "input2": 39,
+      "input3": 76,
+      "input4": 336,
+      "input5": 113,
+      "input6": 57,
+      "input7": 188
+    },
+    "jenkins_hash": {
+      "input1": 12,
+      "input2": 933.6,
+      "input3": 5946.9,
+      "input4": 14025.7,
+      "input5": 55287.7,
+      "input6": 165205.2,
+      "input7": 550043.7,
+      "input8": 1649218.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 11,
+      "input2": 3009.7,
+      "input3": 141925.3,
+      "input4": 8542395.7001,
+      "input5": 32345565.998,
+      "input6": 257067068.3549,
+      "input7": 865704822.3766,
+      "input8": 32345565.998
+    },
+    "matmul4": {
+      "input1": 11,
+      "input2": 8141.2,
+      "input3": 466384.8,
+      "input4": 29303047.2,
+      "input5": 111540954,
+      "input6": 890629644.0032,
+      "input7": 3003978333.9665,
+      "input8": 111540954
+    },
+    "merge_sort": {
+      "input1": 6355.5,
+      "input2": 114575.3,
+      "input3": 1654886.3,
+      "input4": 21771447.6,
+      "input5": 114167.2,
+      "input6": 415687.1
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4428.9,
+      "input2": 78873.2,
+      "input3": 1216929.2,
+      "input4": 15806132.2,
+      "input5": 77161.8,
+      "input6": 285604.5
+    },
+    "radix_sort": {
+      "input1": 9918.1,
+      "input2": 143860.6,
+      "input3": 1375063,
+      "input4": 29684644.5001,
+      "input5": 308806,
+      "input6": 902891.5
+    },
+    "rmq1d_naive": {
+      "input1": 143.3,
+      "input2": 1489,
+      "input3": 2320,
+      "input4": 2847.2,
+      "input5": 1155767.6,
+      "input6": 5254163.1,
+      "input7": 999455024.1
+    },
+    "rmq1d_sparsetable": {
+      "input1": 1134.8,
+      "input2": 10369.6,
+      "input3": 15252.1,
+      "input4": 14152.4,
+      "input5": 913315.3,
+      "input6": 1600881.9,
+      "input7": 33940410.2992
+    },
+    "rmq2d_naive": {
+      "input1": 294.2,
+      "input2": 2964.9,
+      "input3": 26297.1,
+      "input4": 18571,
+      "input5": 10165329.4
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4034.6,
+      "input2": 24961.3,
+      "input3": 139412.3,
+      "input4": 195110.1,
+      "input5": 114695970.0028
+    }
+  },
+  "adce": {
+    "binary_tree": {
+      "input1": 985.7,
+      "input2": 1879.6,
+      "input3": 25287.7,
+      "input4": 342277.4,
+      "input5": 62801128.3,
+      "input6": 1584.3,
+      "input7": 11514.9
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 86.2,
+      "input2": 539.8,
+      "input3": 153.4,
+      "input4": 19,
+      "input5": 35.8,
+      "input6": 472.6,
+      "input7": 523
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15342.7,
+      "input2": 15333,
+      "input3": 15346.1,
+      "input4": 15361.8,
+      "input5": 15361.8,
+      "input6": 15304.6,
+      "input7": 15304.6
+    },
+    "bitcount5": {
+      "input1": 340.9,
+      "input2": 661.2,
+      "input3": 385.3,
+      "input4": 306.2,
+      "input5": 347.3,
+      "input6": 556,
+      "input7": 583.3
+    },
+    "bubble_sort": {
+      "input1": 4278.2,
+      "input2": 409818.6,
+      "input3": 42704405.1004,
+      "input4": 9,
+      "input5": 415103.9,
+      "input6": 3868994.5,
+      "input7": 4277937108.927
+    },
+    "collatz": {
+      "input1": 40.3,
+      "input2": 40.3,
+      "input3": 1797.2,
+      "input4": 1321,
+      "input5": 844.8,
+      "input6": 1892.4,
+      "input7": 2368.5
+    },
+    "gcd": {
+      "input1": 22,
+      "input2": 39,
+      "input3": 76,
+      "input4": 336,
+      "input5": 113,
+      "input6": 57,
+      "input7": 188
+    },
+    "jenkins_hash": {
+      "input1": 12,
+      "input2": 933.6,
+      "input3": 5946.9,
+      "input4": 14025.7,
+      "input5": 55287.7,
+      "input6": 165205.2,
+      "input7": 550043.7,
+      "input8": 1649218.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 11,
+      "input2": 3009.7,
+      "input3": 141925.3,
+      "input4": 8542395.7001,
+      "input5": 32345565.998,
+      "input6": 257067068.3549,
+      "input7": 865704822.3766,
+      "input8": 32345565.998
+    },
+    "matmul4": {
+      "input1": 11,
+      "input2": 8141.2,
+      "input3": 466384.8,
+      "input4": 29303047.2,
+      "input5": 111540954,
+      "input6": 890629644.0032,
+      "input7": 3003978333.9665,
+      "input8": 111540954
+    },
+    "merge_sort": {
+      "input1": 6355.5,
+      "input2": 114575.3,
+      "input3": 1654886.3,
+      "input4": 21771447.6,
+      "input5": 114167.2,
+      "input6": 415687.1
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4428.9,
+      "input2": 78873.2,
+      "input3": 1216929.2,
+      "input4": 15806132.2,
+      "input5": 77161.8,
+      "input6": 285604.5
+    },
+    "radix_sort": {
+      "input1": 9918.1,
+      "input2": 143860.6,
+      "input3": 1375063,
+      "input4": 29684644.5001,
+      "input5": 308806,
+      "input6": 902891.5
+    },
+    "rmq1d_naive": {
+      "input1": 143.3,
+      "input2": 1489,
+      "input3": 2320,
+      "input4": 2847.2,
+      "input5": 1155767.6,
+      "input6": 5254163.1,
+      "input7": 999455024.1
+    },
+    "rmq1d_sparsetable": {
+      "input1": 1134.8,
+      "input2": 10369.6,
+      "input3": 15252.1,
+      "input4": 14152.4,
+      "input5": 913315.3,
+      "input6": 1600881.9,
+      "input7": 33940410.2992
+    },
+    "rmq2d_naive": {
+      "input1": 294.2,
+      "input2": 2964.9,
+      "input3": 26297.1,
+      "input4": 18571,
+      "input5": 10165329.4
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4034.6,
+      "input2": 24961.3,
+      "input3": 139412.3,
+      "input4": 195110.1,
+      "input5": 114695970.0028
+    }
+  },
+  "dae": {
+    "binary_tree": {
+      "input1": 985.7,
+      "input2": 1879.6,
+      "input3": 25287.7,
+      "input4": 342277.4,
+      "input5": 62801128.3,
+      "input6": 1584.3,
+      "input7": 11514.9
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 86.2,
+      "input2": 539.8,
+      "input3": 153.4,
+      "input4": 19,
+      "input5": 35.8,
+      "input6": 472.6,
+      "input7": 523
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15342.7,
+      "input2": 15333,
+      "input3": 15346.1,
+      "input4": 15361.8,
+      "input5": 15361.8,
+      "input6": 15304.6,
+      "input7": 15304.6
+    },
+    "bitcount5": {
+      "input1": 340.9,
+      "input2": 661.2,
+      "input3": 385.3,
+      "input4": 306.2,
+      "input5": 347.3,
+      "input6": 556,
+      "input7": 583.3
+    },
+    "bubble_sort": {
+      "input1": 4278.2,
+      "input2": 409818.6,
+      "input3": 42704405.1004,
+      "input4": 9,
+      "input5": 415103.9,
+      "input6": 3868994.5,
+      "input7": 4277937108.927
+    },
+    "collatz": {
+      "input1": 39.3,
+      "input2": 39.3,
+      "input3": 1796.2,
+      "input4": 1320,
+      "input5": 843.8,
+      "input6": 1891.4,
+      "input7": 2367.5
+    },
+    "gcd": {
+      "input1": 22,
+      "input2": 39,
+      "input3": 76,
+      "input4": 336,
+      "input5": 113,
+      "input6": 57,
+      "input7": 188
+    },
+    "jenkins_hash": {
+      "input1": 12,
+      "input2": 933.6,
+      "input3": 5946.9,
+      "input4": 14025.7,
+      "input5": 55287.7,
+      "input6": 165205.2,
+      "input7": 550043.7,
+      "input8": 1649218.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 11,
+      "input2": 3009.7,
+      "input3": 141925.3,
+      "input4": 8542395.7001,
+      "input5": 32345565.998,
+      "input6": 257067068.3549,
+      "input7": 865704822.3766,
+      "input8": 32345565.998
+    },
+    "matmul4": {
+      "input1": 11,
+      "input2": 8141.2,
+      "input3": 466384.8,
+      "input4": 29303047.2,
+      "input5": 111540954,
+      "input6": 890629644.0032,
+      "input7": 3003978333.9665,
+      "input8": 111540954
+    },
+    "merge_sort": {
+      "input1": 6355.5,
+      "input2": 114575.3,
+      "input3": 1654886.3,
+      "input4": 21771447.6,
+      "input5": 114167.2,
+      "input6": 415687.1
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4428.9,
+      "input2": 78873.2,
+      "input3": 1216929.2,
+      "input4": 15806132.2,
+      "input5": 77161.8,
+      "input6": 285604.5
+    },
+    "radix_sort": {
+      "input1": 9918.1,
+      "input2": 143860.6,
+      "input3": 1375063,
+      "input4": 29684644.5001,
+      "input5": 308806,
+      "input6": 902891.5
+    },
+    "rmq1d_naive": {
+      "input1": 143.3,
+      "input2": 1489,
+      "input3": 2320,
+      "input4": 2847.2,
+      "input5": 1155767.6,
+      "input6": 5254163.1,
+      "input7": 999455024.1
+    },
+    "rmq1d_sparsetable": {
+      "input1": 1134.8,
+      "input2": 10369.6,
+      "input3": 15252.1,
+      "input4": 14152.4,
+      "input5": 913315.3,
+      "input6": 1600881.9,
+      "input7": 33940410.2992
+    },
+    "rmq2d_naive": {
+      "input1": 288.9,
+      "input2": 2936.6,
+      "input3": 26104.4,
+      "input4": 18347.6,
+      "input5": 10135657.9
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4034.6,
+      "input2": 24961.3,
+      "input3": 139412.3,
+      "input4": 195110.1,
+      "input5": 114695970.0028
+    }
+  }
+}

@@ -12,14 +12,19 @@ echo ""
 
 failed_pass=()
 
-for pass in `ls -1 ./filechecks`; do
+echo '{}' | jq '.' > result.json
+
+passes=("no" "all")
+passes+=(`ls -1 ./filechecks`)
+
+for pass in "${passes[@]}"; do
     failed_inputs=()
     echo "== Pass name ${pass} =="
 
+    jq ".${pass} = {}" result.json > tmp.json
+    cat tmp.json > result.json
+
     for p in `ls -1 ./benchmarks`; do
-        if [[ "$pass" == "MergeBasicBlocks" ]]; then
-            break
-        fi
 
         echo "== Testing Benchmark ${p} =="
 
@@ -41,6 +46,9 @@ for pass in `ls -1 ./filechecks`; do
 
         echo ""
 
+        jq ".${pass}.${p} = {}" result.json > tmp.json
+        cat tmp.json > result.json
+
         COUNT=1
 
         for i in `find ./benchmarks/${p}/test -name "input*.txt" | sort` ; do
@@ -48,12 +56,17 @@ for pass in `ls -1 ./filechecks`; do
 
             DIFF=`diff -w ./benchmarks/${p}/test/output${COUNT}.txt <(bin/sf-interpreter .tmp.s < $i)`
 
+            COST=`grep "Cost" ./sf-interpreter.log | cut -f2 -d ":" | cut -f2 -d " "`
+
             if [ -n "${DIFF}" ]; then
                 echo "$p OUTPUT${COUNT}_TEST: FAILED"
                 failed_inputs+=("$i")
             fi
 
             echo "$p OUTPUT${COUNT}_TEST: PASSED"
+
+            jq ".${pass}.${p}.input${COUNT} = ${COST}" result.json > tmp.json
+            cat tmp.json > result.json
 
             COUNT=$((COUNT+1))
         done
@@ -75,6 +88,7 @@ if [[ "${#failed_pass[@]}" -ne 0 ]]; then
     echo "== Failed Pass List =="
     for i in "${failed_pass[@]}"; do
         echo $i
+        printf $i >> failed_pass.log
     done
     echo "OUTPUT TEST FAILURE" 1>&2
 else
