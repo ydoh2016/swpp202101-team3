@@ -23,6 +23,7 @@ PreservedAnalyses MergeBasicBlocksPass::run(Function& F, FunctionAnalysisManager
     bfs.push_back(*it);
   }
 
+  // Reverse to get the correct order
   reverse(bfs.begin(), bfs.end());
   
   vector<pair<BasicBlock*, BasicBlock*>> BBPairToMerge;
