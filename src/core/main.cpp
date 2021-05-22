@@ -18,12 +18,10 @@
 #include "llvm/Transforms/IPO/DeadArgumentElimination.h"
 //add header for Dead code elimination
 #include "llvm/Transforms/Scalar/ADCE.h"
-//add header for Branch-related optimizations including br -> switch
-#include "llvm/Transforms/Scalar/SimplifyCFG.h"
-//add header for Loop invariant code motion
-#include "llvm/Transforms/Scalar/LICM.h"
 //add header for Tail call elimination
 #include "llvm/Transforms/Scalar/TailRecursionElimination.h"
+// add header for gvn
+#include "llvm/Transforms/Scalar/GVN.h"
 
 #include <string>
 
@@ -103,16 +101,11 @@ int main(int argc, char *argv[]) {
   //add Dead code Elimination
   if(specificPass == "all" || specificPass == "adce")  
     FPM.addPass(ADCEPass());
-  //add Branch-related optimizations including br -> switch
-  if(specificPass == "all" || specificPass == "simplifycfg")  
-    FPM.addPass(SimplifyCFGPass());
-  //add Loop invariant code motion
-  if(specificPass == "all" || specificPass == "licm")  
-    FPM.addPass(createFunctionToLoopPassAdaptor(LICMPass()));
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
-  //add Dead argument elimination
+  if(specificPass == "all" || specificPass == "gvn")
+    FPM.addPass(GVN());
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
@@ -120,12 +113,15 @@ int main(int argc, char *argv[]) {
   // if(specificPass == "all" || specificPass == "mergebasicblocks")
   //   FPM1.addPass(MergeBasicBlocksPass());
 
+  //add Dead argument elimination
   if(specificPass == "all" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
   if(specificPass == "all" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
+  if (specificPass == "all" || specificPass == "abbrmem")
+    MPM.addPass(AbbrMemPass());
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
