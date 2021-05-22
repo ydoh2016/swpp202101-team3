@@ -7,6 +7,8 @@ fi
 
 keys=(`jq 'keys[]' result.json`)
 
+rm -rf table.txt
+
 printf "%22s|" ""
 printf "%22s|" "" >> table.txt
 
@@ -32,8 +34,8 @@ for benchmark in `jq ".no | keys[]" result.json`; do
             oriCost=`jq ".no.${benchmark}.${inp}" result.json`
             diff=`echo $oriCost - $cost | bc -l`
             # echo "${diff}"
-            printf "%22s|" "${cost}" >> table.txt
-            printf "%22s|" "${cost}"
+            printf "%22s|" "${diff}" >> table.txt
+            printf "%22s|" "${diff}"
             total[$count]=`echo ${total[$count]} + $diff | bc -l`
             count=$((count+1))
         done
@@ -44,3 +46,10 @@ for benchmark in `jq ".no | keys[]" result.json`; do
     done
 done
 
+printf "%22s|" "total" >> table.txt
+printf "%22s|" "total"
+
+for t in "${total[@]}"; do
+    printf "%22s|" "${t}" >> table.txt
+    printf "%22s|" "${t}"
+done

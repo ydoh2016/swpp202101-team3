@@ -108,8 +108,8 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   //add custom passes
-  // if(specificPass == "all" || specificPass == "mergebasicblocks")
-  //   FPM1.addPass(MergeBasicBlocksPass());
+  if(specificPass == "all" || specificPass == "mergebasicblocks")
+    FPM1.addPass(MergeBasicBlocksPass());
 
   //add Dead argument elimination
   if(specificPass == "all" || specificPass == "dae")  
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  // MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   
   MPM.run(*M, MAM);
