@@ -133,36 +133,6 @@ vector<vector<bool>> RegisterGraph::LiveInterval(Module &M)
 
             Instruction* term = BB.getTerminator();
             vector<bool> PhiTerm = live[term];
-            
-            //Vector for storing liveness after terminator, before successor
-            map<unsigned,bool> Dead;
-
-            for(BasicBlock* succ : successors(&BB)) {
-                for(PHINode& phi : succ->phis()) {
-                    Value* incomeV = phi.getIncomingValueForBlock(&BB);
-                    unsigned fv = findValue(incomeV);
-                    if (fv != -1)
-                        Dead[fv] = true;
-                }
-            }
-
-            for(BasicBlock* succ : successors(&BB)) {
-                // int phinum = NumPhi[succ];
-                for(PHINode& phi : succ->phis()) {
-                    Value* incomeV = phi.getIncomingValueForBlock(&BB);
-                    unsigned fv = findValue(incomeV);
-
-                    if (fv != -1 && live[&phi][fv]) {
-                        Dead[fv] = false;
-                    }
-                }
-            }
-
-            for (auto &[fv, d] : Dead) {
-                if (d) PhiTerm[fv] = false;
-            }
-
-            Dead.clear();
 
             // Condition for BranchInst or SwitchInst should be alive
             BranchInst *br;
@@ -321,11 +291,17 @@ vector<Value *> RegisterGraph::PerfectEliminationOrdering(vector<Value *> &value
         Sigma.remove(set<Value *>());
     }
 
+    // construct a temporary set for instruction owner check
+    std::unordered_set<Value*> values_set(values.begin(), values.end());
+
     //reserved colors are always located at last;
     //because GreedyColoring() calls reverse(PEO.begin(), PEO.end()),
     //this reserved colors will be colored prior to other nodes
     for (auto &[I, c] : ReservedColor) {
-        PEO.push_back(I);
+        // push into PEO only if the 'reserving' instruction belongs to this function
+        if (values_set.find(I) != values_set.end()) {
+            PEO.push_back(I);
+        }
     }
     assert(PEO.size() == values.size() && "PEO should be the same size as values");
 

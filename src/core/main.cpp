@@ -6,6 +6,7 @@
 #include "../backend/RegisterSpill.h"
 #include "../backend/UnfoldVectorInst.h"
 #include "../backend/ConstantFolding.h"
+#include "../backend/SplitSelfLoop.h"
 
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/Support/raw_ostream.h"
@@ -110,6 +111,7 @@ int main(int argc, char *argv[]) {
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
 
+  SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
   LivenessAnalysis().run(*M, MAM);
   SpillCostAnalysis().run(*M, MAM);
