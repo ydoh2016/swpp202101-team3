@@ -94,3 +94,5 @@ if [[ "${#failed_pass[@]}" -ne 0 ]]; then
 else
     echo "== All Tests are PASSED! =="
 fi
+
+rm -rf tmp.json
