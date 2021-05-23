@@ -135,12 +135,14 @@ void AssemblyEmitter::visitAllocaInst(AllocaInst& I) {
     if(I.isStaticAlloca()) {
         
     }
-    else if(Register* reg = symbol->castToRegister()) {
-        
-        *fout << emitInst({name(&I), "= call _Alloca", size, reg->getName()});
-        *fout << emitInst({"sp", "= call _SpCal", name(&I)});
-        // *fout << emitInst({"sp", "= sub", "sp", reg->getName(), "64"});
-        // *fout << emitInst({name(&I), "= mul", "sp", "1", "64"});
+    else if(symbol) {
+        if(Register* reg = symbol->castToRegister()) {
+            
+            *fout << emitInst({name(&I), "= call _Alloca", size, reg->getName()});
+            *fout << emitInst({"sp", "= call _SpCal", name(&I)});
+            // *fout << emitInst({"sp", "= sub", "sp", reg->getName(), "64"});
+            // *fout << emitInst({name(&I), "= mul", "sp", "1", "64"});
+        }
     }
 }
 
