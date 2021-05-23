@@ -47,8 +47,8 @@ string AssemblyEmitter::stringBandWidth(Value* v) {
     return to_string(getBitWidth(v->getType()));
 }
 
-AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset) :
-            fout(fout), TM(&TM), SM(&SM), spOffset(spOffset) {
+AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes) :
+            fout(fout), TM(&TM), SM(&SM), spOffset(spOffset), mallocLikeFunc(mallocLikes) {
     //base assembly code for heap to stack
     //if there's not enough space, it will do malloc
     *fout << "start _Alloca 2:\n"
@@ -275,13 +275,19 @@ void AssemblyEmitter::visitCallInst(CallInst& I) {
     for(Use& arg : I.args()) {
         args.push_back(name(arg.get()));
     }
-    if(Fname == "malloc") {
+    if(mallocLikeFunc.find(Fname) != mallocLikeFunc.end()) {
+        vector<string> printlist = {name(&I), "= call", Fname};
+        printlist.insert(printlist.end(), args.begin(), args.end());
+        *fout << emitInst(printlist);
+        *fout << emitInst({"sp", "= call _SpCal", name(&I)});
+    }
+    else if(Fname == "malloc") {
         assert(args.size()==1 && "argument of malloc() should be 1");
         *fout << emitInst({name(&I), "= malloc", name(I.getArgOperand(0))});
     }
     else if(Fname == "free") {
         assert(args.size()==1 && "argument of free() should be 1");
-        *fout << emitInst({"_Free", name(I.getArgOperand(0))});
+        *fout << emitInst({"call", "_Free", name(I.getArgOperand(0))});
     }
     else if(UnfoldVectorInstPass::VLOADS.find(Fname) != UnfoldVectorInstPass::VLOADS.end()) {
         vector<string> asmb;

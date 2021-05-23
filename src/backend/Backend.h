@@ -136,9 +136,10 @@ class AssemblyEmitter : public InstVisitor<AssemblyEmitter> {
 
   //updates the bandwidth and returns the value.
   string stringBandWidth(Value*);
+  set<string> mallocLikeFunc;
 
 public:
-  AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset);
+  AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes);
 
   //Visit functions; should statically override.
   void visitFunction(Function&);
@@ -193,12 +194,13 @@ class Backend : public PassInfoMixin<Backend> {
   bool printProcess;
   //Model for the target machine of our project.
   //Contains information about register files and 
-  TargetMachine TM;  
+  TargetMachine TM; 
+  set<string> mallocLikeFunc;
 
 public:
 
-  Backend(string outputFile, bool printProcess = false) :
-      outputFile(outputFile), printProcess(printProcess), TM() {}
+  Backend(string outputFile, set<string>& mallocLikes, bool printProcess = false) :
+      outputFile(outputFile), printProcess(printProcess), TM(), mallocLikeFunc(mallocLikes) {}
   
   //runs the backend, which emits the assembly to given .s file.
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &MAM);

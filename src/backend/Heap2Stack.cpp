@@ -11,6 +11,7 @@ using namespace std;
 using namespace llvm;
 
 namespace backend {
+  
 PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
   auto& TLI = FAM.getResult<TargetLibraryAnalysis>(F);
   auto& DL = F.getParent() -> getDataLayout();
@@ -26,11 +27,17 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
             heap_allocation.push_back(call_inst);
             //BasicBlock::iterator bb_it(I);
             //ReplaceInstWithInst(I.getParent() -> getInstList(), bb_it, createAllocaInstAtEntry(BB));
+            for(auto U : I.users()) {
+              if(auto DD = dyn_cast<ReturnInst>(U)) {
+                mallocLikeFunc.insert(F.getName().str());
+              }
+            }
           }
         }
       }
     }
   }
+  
   // replace malloc and free with alloca
   IRBuilder<> IB(F.getContext());
   for(Instruction* I : heap_allocation) {

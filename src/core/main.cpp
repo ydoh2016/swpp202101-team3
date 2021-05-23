@@ -110,8 +110,10 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
-  if(specificPass == "all" || specificPass == "heap2stack")
-    FPM3.addPass(Heap2Stack());
+  set<string> malloc_like_func;
+  if(specificPass == "all" || specificPass == "heap2stack") {
+    FPM3.addPass(Heap2Stack(malloc_like_func));
+  }
 
 
   // from FPM to MPM
@@ -143,7 +145,7 @@ int main(int argc, char *argv[]) {
   }
 
   // execute backend to emit assembly
-  Backend B(optOutput, optPrintProgress);
+  Backend B(optOutput, malloc_like_func, optPrintProgress);
   B.run(*M, MAM);
   
   return 0;
