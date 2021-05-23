@@ -45,7 +45,7 @@ PreservedAnalyses MergeBasicBlocksPass::run(Function& F, FunctionAnalysisManager
   EliminateUnreachableBlocks(F);
   // Finally, remove dangling phi nodes
   removeDanglingPhi(&F);
-
+  
   return PreservedAnalyses::all();
 }
 
@@ -125,7 +125,12 @@ void MergeBasicBlocksPass::mergeSafely(Function *F, const DominatorTree &DT, Bas
       int incomingIdx = phi.getBasicBlockIndex(BBSucc);
       if (incomingIdx != -1) {
         Value *incomingVal = phi.getIncomingValue(incomingIdx);
-        phi.addIncoming(incomingVal, BBPred);
+        Value *replacingVal = VM[incomingVal];
+        if (replacingVal) {
+          phi.addIncoming(replacingVal, BBPred);
+        } else {
+          phi.addIncoming(incomingVal, BBPred);
+        }
       }
     }
   }
