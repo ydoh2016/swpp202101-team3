@@ -519,12 +519,12 @@ map<Function*, SpInfo> Backend::processAlloca(Module& M, SymbolMap& SM) {
               if(callee) {
                 if(mallocLikeFunc.find(callee->getName().str()) != mallocLikeFunc.end()) {
                   spOffsetMap[&F].touched = true;
-                }
-                for(auto U : I.users()) {
-                  if(auto DD = dyn_cast<ReturnInst>(U)) {
-                    if(mallocLikeFunc.find(F.getName().str()) == mallocLikeFunc.end()) {
-                      mallocLikeFunc.insert(F.getName().str());
-                      found = true;
+                  for(auto U : I.users()) {
+                    if(auto DD = dyn_cast<ReturnInst>(U)) {
+                      if(mallocLikeFunc.find(F.getName().str()) == mallocLikeFunc.end()) {
+                        mallocLikeFunc.insert(F.getName().str());
+                        found = true;
+                      }
                     }
                   }
                 }
