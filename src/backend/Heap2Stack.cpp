@@ -34,7 +34,7 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
   // replace malloc and free with alloca
   IRBuilder<> IB(F.getContext());
   for(Instruction* I : heap_allocation) {
-    IB.SetInsertPoint(dyn_cast<Instruction>(F.getEntryBlock().getFirstInsertionPt()));
+    IB.SetInsertPoint(dyn_cast<Instruction>(I->getNextNode()));
     auto* malloc = dyn_cast<CallInst>(I);
     auto* type = getMallocAllocatedType(malloc, &TLI);
     Value* size = getMallocArraySize(malloc, DL, &TLI, true);
