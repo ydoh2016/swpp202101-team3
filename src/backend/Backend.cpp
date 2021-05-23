@@ -59,7 +59,7 @@ PreservedAnalyses Backend::run(Module &M, ModuleAnalysisManager &MAM) {
   //- entry block should not have a predecessor block.
   //   => Else, raise error.
   //- allocas and its direct uses are renamed: __st__offset__ ex) __st__8__
-  map<Function*, unsigned> spOffsetMap = processAlloca(M, symbolMap);
+  map<Function*, SpInfo> spOffsetMap = processAlloca(M, symbolMap);
 
 /*
   TODO : features to be implemented in PR2
@@ -155,7 +155,7 @@ void Backend::SSAElimination(Module &M, SymbolMap &symbolMap, RegisterGraph& RG)
         }
         for(BasicBlock &BB : F) {
             // To represent graph, following vector(adjacent list) is used.
-            vector<vector<Symbol *>> adjList(32);
+            vector<vector<Symbol *>> adjList(USER_REGISTER_NUM);
             Instruction *I = BB.getTerminator();
             // If terminator is return statement, then pass it.
             if(isa<ReturnInst>(I)) {
@@ -170,10 +170,10 @@ void Backend::SSAElimination(Module &M, SymbolMap &symbolMap, RegisterGraph& RG)
             // If there is u -> v edge in graph, it means the value of register v
             // should move to register u.
             
-            vector<unsigned> indegree(32, 0), outdegree(32, 0);
+            vector<unsigned> indegree(USER_REGISTER_NUM, 0), outdegree(USER_REGISTER_NUM, 0);
             set<int> unused;
-            for(unsigned i = 0; i < 32; i++) {
-                bool added[32] = {0,};
+            for(unsigned i = 0; i < USER_REGISTER_NUM; i++) {
+                bool added[USER_REGISTER_NUM] = {0,};
                 for(auto &there : adjList[i]) {
                     int reg = TM.regNo(there);
                     if(reg != -1 && !added[reg]) {
@@ -188,17 +188,17 @@ void Backend::SSAElimination(Module &M, SymbolMap &symbolMap, RegisterGraph& RG)
                 }
             }
             // validate phi elim graph
-            for (unsigned i=0; i<32; i++) {
+            for (unsigned i=0; i<USER_REGISTER_NUM; i++) {
               assert(outdegree[i] < 2);
             }
             
             // countRest represents the number of untracked vertices, 
             // but this is useless (until now).
-            int countRest = 32 - (int)unused.size();
+            int countRest = USER_REGISTER_NUM - (int)unused.size();
 
             // Use queue to traverse graph
             queue<unsigned> q;
-            for(unsigned i = 0; i < 32; i++) {
+            for(unsigned i = 0; i < USER_REGISTER_NUM; i++) {
                 if(!indegree[i] && unused.find(i) == unused.end()) {
                     q.push(i);
                 }
@@ -214,7 +214,7 @@ void Backend::SSAElimination(Module &M, SymbolMap &symbolMap, RegisterGraph& RG)
                 Value *value = findLeastReg(adjList[curReg][0], BB, symbolMap);
                 
                 // Create new Mul instruction to move value to curReg.
-                // TODO: Fix below APInt(32, 1) to proper data type.
+                // TODO: Fix below APInt(USER_REGISTER_NUM, 1) to proper data type.
                 if(value->getType()->isPointerTy()) {
                     Instruction *ptoi = CastInst::CreateBitOrPointerCast(value, IntegerType::getInt64Ty(Context));
                     ptoi->insertBefore(BB.getTerminator());
@@ -239,7 +239,7 @@ void Backend::SSAElimination(Module &M, SymbolMap &symbolMap, RegisterGraph& RG)
                 continue;
             } else if(unused.size() > 0) { // There is an extra register to use.
                 int registerNum = *unused.begin();
-                for(unsigned i = 0; i < 32; i++) {
+                for(unsigned i = 0; i < USER_REGISTER_NUM; i++) {
                     // indegree[i] > 0 means register i is part of the loop.
                     if(indegree[i] > 0) {
                         // Move the value of register i to temporary register.
@@ -308,7 +308,7 @@ void Backend::SSAElimination(Module &M, SymbolMap &symbolMap, RegisterGraph& RG)
                 }
             } else {
                 // Swap two adjacent registers.
-                for(unsigned i = 0; i < 32; i++) {
+                for(unsigned i = 0; i < USER_REGISTER_NUM; i++) {
                     if(indegree[i] > 0) {
                         q.push(i);
                         Value *startValue = findLeastReg(TM.reg(i), BB, symbolMap);
@@ -498,9 +498,9 @@ void Backend::addEdges(BasicBlock &srcBB, BasicBlock &dstBB, SymbolMap &symbolMa
     }
 }
 
-map<Function*, unsigned> Backend::processAlloca(Module& M, SymbolMap& SM) {
+map<Function*, SpInfo> Backend::processAlloca(Module& M, SymbolMap& SM) {
 
-  map<Function*, unsigned> spOffsetMap;
+  map<Function*, SpInfo> spOffsetMap;
 
   for(Function& F : M) {
     if(F.isDeclaration()) continue;
@@ -513,17 +513,25 @@ map<Function*, unsigned> Backend::processAlloca(Module& M, SymbolMap& SM) {
 
       AllocaInst* alloca = dyn_cast<AllocaInst>(&I);
       if(alloca) {
-        //Update SymbolMap.
-        Memory* stackaddr = new Memory(TM.sp(), acc);
-        SM.set(alloca, stackaddr);
-        //Update acc
-        acc += getAccessSize(alloca->getAllocatedType());
+        //only when static stack allocation, we can get acc
+        if(alloca->isStaticAlloca()) {
+          //Update SymbolMap.
+          Memory* stackaddr = new Memory(TM.fp(), acc);
+          SM.set(alloca, stackaddr);
+          //Update acc
+          auto* v = alloca->getArraySize();
+          auto* ci = dyn_cast<ConstantInt>(v);
+          if(ci) {
+            auto val = ci->getSExtValue();
+            acc += (getAccessSize(alloca->getAllocatedType()) * val);
+          }
+        }
+        //In any case, we should check it has alloca instructions.
+        spOffsetMap[&F].touched = true;
       }
     }
-
-    spOffsetMap[&F] = acc;
+    spOffsetMap[&F].acc = acc;
   }
-
   return spOffsetMap;
 }
  
