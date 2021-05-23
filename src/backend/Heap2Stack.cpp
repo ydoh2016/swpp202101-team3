@@ -24,17 +24,15 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
           if(callee -> getName().str() == "malloc") {
             // found malloc
             heap_allocation.push_back(call_inst);
-            //BasicBlock::iterator bb_it(I);
-            //ReplaceInstWithInst(I.getParent() -> getInstList(), bb_it, createAllocaInstAtEntry(BB));
           }
         }
       }
     }
   }
-  // replace malloc and free with alloca
+  // replace malloc with alloca
   IRBuilder<> IB(F.getContext());
   for(Instruction* I : heap_allocation) {
-    IB.SetInsertPoint(dyn_cast<Instruction>(I->getNextNode()));
+    IB.SetInsertPoint(dyn_cast<Instruction>(I -> getNextNode()));
     auto* malloc = dyn_cast<CallInst>(I);
     auto* type = getMallocAllocatedType(malloc, &TLI);
     Value* size = getMallocArraySize(malloc, DL, &TLI, true);

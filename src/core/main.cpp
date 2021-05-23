@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
-  if(specificPass == "all" || specificPass == "heap2stack")
+  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack());
 
 

@@ -1,3 +1,9 @@
+;CHECK-LABEL: start main 0
+;CHECK-NOT: malloc
+;CHECK-NOT: free
+;CHECK-NOT: bitcast
+;CHECK-LABEL: end main
+
 define void @main() {
     %a = call noalias i8* @malloc(i64 8)
     %b = bitcast i8* %a to i64*
