@@ -11,12 +11,37 @@ using namespace std;
 using namespace llvm;
 
 namespace backend {
+
+  bool checkConv(Function* F, set<string>& mallocLikeFunc) {
+    for(auto U : F->users()) {
+      auto I = dyn_cast<Instruction>(U);
+      if(I){
+        Function* caller = I->getFunction();
+        if(caller->getNumUses() == 0) {
+          
+        }
+        else {
+          bool check = false;
+          for(auto U : I->users()) {
+            if(auto DD = dyn_cast<ReturnInst>(U)) {
+              check = checkConv(caller, mallocLikeFunc);
+            }
+          }
+          if(!check)
+            return false;
+        }        
+      }
+    }
+    mallocLikeFunc.insert(F->getName().str());
+    return true;
+  }
   
 PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
   auto& TLI = FAM.getResult<TargetLibraryAnalysis>(F);
   auto& DL = F.getParent() -> getDataLayout();
   vector<Instruction*> heap_allocation;
-  // find malloc
+  bool forced = F.getNumUses() <= 0;
+  
   for(auto& BB : F) {
     for(auto& I : BB) {
       // find heap allocation(malloc) / deallocation(free)
@@ -24,12 +49,26 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
         if(Function *callee = call_inst -> getCalledFunction()) {
           if(callee -> getName().str() == "malloc") {
             // found malloc
-            heap_allocation.push_back(call_inst);
-            //if the user of I is return than we assume it a memory allocation func
-            //aka mallocLikeFunc
-            for(auto U : I.users()) {
-              if(auto DD = dyn_cast<ReturnInst>(U)) {
-                mallocLikeFunc.insert(F.getName().str());
+            if(F.getNumUses()<=0)
+              heap_allocation.push_back(call_inst);
+            else {
+              for(auto U : I.users()) {
+                if(auto DD = dyn_cast<ReturnInst>(U)) {
+                  if(checkConv(&F, mallocLikeFunc)) {
+                    heap_allocation.push_back(call_inst);
+                    break;
+                  }
+                }
+                else if(auto I = dyn_cast<BitCastInst>(U)) {
+                  for(auto U : I->users()) {
+                    if(auto DD = dyn_cast<ReturnInst>(U)) {
+                      if(checkConv(&F, mallocLikeFunc)) {
+                        heap_allocation.push_back(call_inst);
+                        break;
+                      }
+                    }
+                  }
+                }
               }
             }
           }
