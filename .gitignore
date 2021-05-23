@@ -47,3 +47,6 @@ bin/sf-compiler-tests
 
 # FileCheck output
 .tmp.s
+
+# cost log file
+*.log

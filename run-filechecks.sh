@@ -52,5 +52,5 @@ if [[ "${#failed_opts[@]}" -ne 0 ]]; then
   echo "FILECHECK FAILURE" 1>&2
   exit 1
 else
-  echo "== All Tests are PASSED! =="
+  echo "== All FileCheck Tests are PASSED! =="
 fi

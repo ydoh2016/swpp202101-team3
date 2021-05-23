@@ -99,23 +99,23 @@ int main(int argc, char *argv[]) {
 
   // add existing passes
   //add Dead code Elimination
-  if(specificPass == "all" || specificPass == "adce")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "adce")  
     FPM.addPass(ADCEPass());
   //add  Tail call elimination
-  if(specificPass == "all" || specificPass == "tailcallelim")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   //add custom passes
-  if(specificPass == "all" || specificPass == "mergebasicblocks")
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
 
   //add Dead argument elimination
-  if(specificPass == "all" || specificPass == "dae")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
-  if(specificPass == "all" || specificPass == "constantfolding")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
   // from FPM to MPM

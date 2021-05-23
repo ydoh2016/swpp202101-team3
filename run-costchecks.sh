@@ -12,10 +12,10 @@ echo ""
 
 failed_pass=()
 
-echo '{}' | jq '.' > result.json
+# echo '{}' | jq '.' > result.json
 
-passes=("no" "all")
-passes+=(`ls -1 ./filechecks`)
+passes=("all")
+# passes+=("sprint1")
 
 for pass in "${passes[@]}"; do
     failed_inputs=()
@@ -73,14 +73,9 @@ for pass in "${passes[@]}"; do
     done
     if [[ "${#failed_inputs[@]}" -ne 0 ]]; then
         failed_pass+=("$pass") 
-        echo "== Pass ${pass} Failed Input List =="
         for i in "${failed_inputs[@]}"; do
-            echo $i
             failed_pass+=("$i")
         done
-        echo "OUTPUT TEST FAILURE" 1>&2
-    else
-        echo "== All Tests are PASSED! =="
     fi
 done
 
@@ -88,11 +83,14 @@ if [[ "${#failed_pass[@]}" -ne 0 ]]; then
     echo "== Failed Pass List =="
     for i in "${failed_pass[@]}"; do
         echo $i
-        printf $i >> failed_pass.log
+        printf "$i\n" >> failed_pass.log
     done
     echo "OUTPUT TEST FAILURE" 1>&2
+    exit 1
 else
-    echo "== All Tests are PASSED! =="
+    echo "== All Output Tests are PASSED! =="
 fi
 
 rm -rf tmp.json
+
+./run-comparator.sh

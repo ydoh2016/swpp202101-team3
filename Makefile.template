@@ -16,6 +16,7 @@ all: bin/sf-compiler bin/sf-compiler-tests
 test: all
 	@bin/sf-compiler-tests
 	@./run-filechecks.sh $(FILECHECK_PATH)
+	@./run-costchecks.sh
 
 bin/sf-compiler: $(OBJ_CORE) $(OBJ_BACKEND)
 	@$(CXX) $(ISYSROOT) $(LDFLAGS) -o bin/sf-compiler $(OBJ_CORE) $(OBJ_BACKEND)
