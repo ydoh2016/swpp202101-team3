@@ -254,19 +254,40 @@ void AbbrMemPass::replaceInstructions(Module *M) {
                 Instruction *start = sequence[0];
                 Value *vsPtr = start->getOperand(1); // Pointer to which values are stored
                 vector<Value*> vsVals; // 8 values to store
+                Instruction *end = start;
                 for (int i = 0; i < MAXSEQ; ++i) {
                     // Use 0 as a placeholders
                     auto vsVal = sequence[i] == nullptr ? 
                     ConstantInt::get(Type::getInt64Ty(mContext), 0) : 
                     sequence[i]->getOperand(0);
                     vsVals.push_back(vsVal);
+                    // Get the last position
+                    if (sequence[i] != nullptr) {
+                        end = sequence[i];
+                    }
                 }
                 auto VMask = ConstantInt::get(Type::getInt64Ty(mContext), getMask(sequence));
                 vector<Value*> vstore8Args = {vsVals[0], vsVals[1], vsVals[2], 
                                               vsVals[3], vsVals[4], vsVals[5], 
                                               vsVals[6], vsVals[7], vsPtr, VMask};
                 Instruction *vstore8Call = CallInst::Create(vstore8ty, vstore8, 
-                                                            vstore8Args, "", start);
+                                                            vstore8Args, "", end);
+            }
+
+            for (auto sequence : loadSequences) {
+                for (auto load : sequence) {
+                    if (load != nullptr) {
+                        load->eraseFromParent();
+                    }
+                }
+            }
+
+            for (auto sequence : storeSequences) {
+                for (auto store : sequence) {
+                    if (store != nullptr) {
+                        store->eraseFromParent();
+                    }
+                }
             }
         }
     }

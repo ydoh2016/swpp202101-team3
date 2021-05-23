@@ -113,7 +113,6 @@ int main(int argc, char *argv[]) {
   
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
-  outs() << *M << "\n";
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
   LivenessAnalysis().run(*M, MAM);
