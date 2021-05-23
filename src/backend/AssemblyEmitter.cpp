@@ -55,7 +55,7 @@ AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap
     "._defaultBB0:\n"
     "  r1 = mul arg1 arg2 64\n"
     "  r2 = sub sp r1 64\n"
-    "  r3 = icmp lt r2 10000\n"
+    "  r3 = icmp slt r2 10000 64\n"
     "  br r3 ._malloc ._alloca\n"
     "._malloc:\n"
     "  r2 = malloc r1\n"
@@ -66,7 +66,7 @@ AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap
     "\n"
     "start _SpCal 1:\n"
     "  ._defaultBB0:\n"
-    "  r1 = icmp gt arg1 102400\n"
+    "  r1 = icmp ugt arg1 102400 64\n"
     "  br r1 ._malloc ._alloca\n"
     "._mallac:\n"
     "  ret sp\n"
@@ -76,7 +76,7 @@ AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap
     "\n"
     "start _Free 1:\n"
     "  ._defaultBB0:\n"
-    "  r1 = icmp gt arg1 102400\n"
+    "  r1 = icmp ugt arg1 102400 64\n"
     "  br r1 ._malloc ._alloca\n"
     "._mallac:\n"
     "  free arg1\n"
@@ -137,8 +137,8 @@ void AssemblyEmitter::visitAllocaInst(AllocaInst& I) {
     }
     else if(Register* reg = symbol->castToRegister()) {
         
-        *fout << emitInst({name(&I), "= call @_Alloca", size, reg->getName()});
-        *fout << emitInst({"sp", "= call @_SpCal", name(&I)});
+        *fout << emitInst({name(&I), "= call _Alloca", size, reg->getName()});
+        *fout << emitInst({"sp", "= call _SpCal", name(&I)});
         // *fout << emitInst({"sp", "= sub", "sp", reg->getName(), "64"});
         // *fout << emitInst({name(&I), "= mul", "sp", "1", "64"});
     }
