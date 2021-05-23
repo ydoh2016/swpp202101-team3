@@ -563,17 +563,6 @@ map<Function*, SpInfo> Backend::processAlloca(Module& M, SymbolMap& SM) {
         //In any case, we should check it has alloca instructions.
         spOffsetMap[&F].touched = true;
       }
-      else {
-        CallInst* callInst = dyn_cast<CallInst>(&I);
-        if(callInst) {
-          Function *callee = callInst->getCalledFunction();
-          if(callee) {
-            if(mallocLikeFunc.find(callee->getName().str()) != mallocLikeFunc.end()) {
-              spOffsetMap[&F].touched = true;
-            }
-          }
-        }
-      }
     }
     spOffsetMap[&F].acc = acc;
   }

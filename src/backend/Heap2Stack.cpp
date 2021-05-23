@@ -25,8 +25,8 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
           if(callee -> getName().str() == "malloc") {
             // found malloc
             heap_allocation.push_back(call_inst);
-            //BasicBlock::iterator bb_it(I);
-            //ReplaceInstWithInst(I.getParent() -> getInstList(), bb_it, createAllocaInstAtEntry(BB));
+            //if the user of I is return than we assume it a memory allocation func
+            //aka mallocLikeFunc
             for(auto U : I.users()) {
               if(auto DD = dyn_cast<ReturnInst>(U)) {
                 mallocLikeFunc.insert(F.getName().str());

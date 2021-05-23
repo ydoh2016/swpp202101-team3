@@ -275,6 +275,7 @@ void AssemblyEmitter::visitCallInst(CallInst& I) {
     for(Use& arg : I.args()) {
         args.push_back(name(arg.get()));
     }
+    //Find all memory allocation call, apply special stack pointer update call
     if(mallocLikeFunc.find(Fname) != mallocLikeFunc.end()) {
         vector<string> printlist = {name(&I), "= call", Fname};
         printlist.insert(printlist.end(), args.begin(), args.end());
