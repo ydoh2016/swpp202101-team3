@@ -193,125 +193,87 @@ int AbbrMemPass::getMask(const vector<Instruction*> &sequence) {
     return mask;
 }
 
-void AbbrMemPass::insertFunctionCall(const vector<vector<Instruction*>> &sequences, BasicBlock *BB) {
-    auto &bbContext = BB->getContext();
-    auto int64PtrType = Type::getInt64PtrTy(bbContext);
-    auto int64Type = Type::getInt64Ty(bbContext);
-    auto int64VectorType = VectorType::get(int64Type, MAXSEQ, false);
-    auto voidType = Type::getVoidTy(BB->getContext());
-
-    bool isLoad = sequences[0][0]->getOpcode() == Instruction::Load;
-
-    if (isLoad) {
-        vector<Type*> vload8Args = {int64PtrType, int64Type};
-        auto vload8ty = FunctionType::get(int64VectorType, vload8Args, false);
-        // Creates a function with prototype '<8 x i64> (i64*, i64)' 
-        auto vload8 = Function::Create(vload8ty, Function::ExternalLinkage, "vload8");
-
-        vector<Type*> extract8Args = {int64VectorType, int64Type};
-        auto extract8ty = FunctionType::get(int64Type, extract8Args, false); 
-        auto extract8 = Function::Create(extract8ty, Function::ExternalLinkage, "extract_element8");
-
-        for (auto &sequence : sequences) {
-            Instruction *start = sequence[0];
-            auto VMask = ConstantInt::get(Type::getInt64Ty(BB->getContext()), getMask(sequence));
-            vector<Value*> vload8Args = {start->getOperand(0), VMask};
-            Instruction *vload8Call = CallInst::Create(vload8ty, vload8, 
-                                                       vload8Args, "", start);
-            // Create extract8 calls following the vload8
-            for (int i = 0; i < MAXSEQ; ++i) {
-                if (sequence[i] != nullptr) {
-                    auto VIdx = ConstantInt::get(Type::getInt64Ty(BB->getContext()), i);
-                    vector<Value*> extract8Args = {vload8Call, VIdx};
-                    auto extract8Call = CallInst::Create(extract8ty, extract8, 
-                                                         extract8Args, "", start);
-                    sequence[i]->replaceAllUsesWith(extract8Call);
-                }
-            }
-        }
-    } else {
-        vector<Type*> vstore8Args = {int64Type, int64Type, int64Type, int64Type,
-                                int64Type, int64Type, int64Type, int64Type,
-                                int64PtrType, int64Type};
-        auto vstore8ty = FunctionType::get(voidType, vstore8Args, false);
-        auto vstore8 = Function::Create(vstore8ty, Function::ExternalLinkage, "vstore8");
-
-        for (auto &sequence : sequences) {
-            Instruction *start = sequence[0];
-            auto VMask = ConstantInt::get(Type::getInt64Ty(BB->getContext()), getMask(sequence));
-            vector<Value*> vstore8Args = {start->getOperand(0), VMask};
-            //Instruction *vstore8Call = CallInst::Create(vstore8ty, vstore8, 
-                                                        //vstore8Args, "", start);
-        }
-    }
-}
-
-// Try to optimize each block
-void AbbrMemPass::processBasicBlock(BasicBlock *BB) {
-    vector<Instruction*> loads;
-    vector<vector<Instruction*>> loadSequences;
-    getInst(BB, Instruction::Load, &loads);
-    getSequences(loads, &loadSequences);
-    insertFunctionCall(loadSequences, BB);
-
-    vector<Instruction*> stores;
-    vector<vector<Instruction*>> storeSequences;
-    getInst(BB, Instruction::Store, &stores);
-    getSequences(stores, &storeSequences);
-    insertFunctionCall(storeSequences, BB);
-}
-
 // Declare vector memory access functions
-void AbbrMemPass::addDeclarations(Module *M) {
-    auto &mContext = M->getContext();
-    auto int64PtrType = Type::getInt64PtrTy(mContext);
-    auto int64Type = Type::getInt64Ty(mContext);
-    auto int64VectorType = VectorType::get(int64Type, 8, false);
-    auto voidType = Type::getVoidTy(mContext);
+void AbbrMemPass::replaceInstructions(Module *M) {
+    LLVMContext &mContext = M->getContext();
+    PointerType *int64PtrType = Type::getInt64PtrTy(mContext);
+    IntegerType *int64Type = Type::getInt64Ty(mContext);
+    VectorType *int64VectorType = VectorType::get(int64Type, MAXSEQ, false);
+    Type *voidType = Type::getVoidTy(mContext);
 
     vector<Type*> vload8Args = {int64PtrType, int64Type}; 
-    auto vload8ty = FunctionType::get(int64VectorType, vload8Args, false); 
-    auto vload8 = Function::Create(vload8ty, Function::ExternalLinkage, "vload8", M);
+    FunctionType *vload8ty = FunctionType::get(int64VectorType, vload8Args, false); 
+    Function *vload8 = Function::Create(vload8ty, Function::ExternalLinkage, "vload8", M);
 
-    vector<Type*> extract8Args = {int64VectorType, int64Type};
-    auto extract8ty = FunctionType::get(int64Type, extract8Args, false); 
-    auto extract8 = Function::Create(extract8ty, Function::ExternalLinkage, "extract_element8", M);
+    vector<Type*> extract8ArgTy = {int64VectorType, int64Type};
+    FunctionType *extract8ty = FunctionType::get(int64Type, extract8ArgTy, false); 
+    Function *extract8 = Function::Create(extract8ty, Function::ExternalLinkage, "extract_element8", M);
 
-    vector<Type*> vstore8Args = {int64Type, int64Type, int64Type, int64Type,
+    vector<Type*> vstore8ArgTy = {int64Type, int64Type, int64Type, int64Type,
                                  int64Type, int64Type, int64Type, int64Type,
                                  int64PtrType, int64Type};
-    auto vstore8ty = FunctionType::get(voidType, vstore8Args, false); 
-    auto vstore8 = Function::Create(vstore8ty, Function::ExternalLinkage, "vstore8", M);
+    FunctionType *vstore8ty = FunctionType::get(voidType, vstore8ArgTy, false); 
+    Function *vstore8 = Function::Create(vstore8ty, Function::ExternalLinkage, "vstore8", M);
+
+    for (auto &F : *M) {
+        for (auto &BB : F) {
+            // Find load instructions accessing sequential memory
+            vector<Instruction*> loads;
+            vector<vector<Instruction*>> loadSequences;
+            getInst(&BB, Instruction::Load, &loads);
+            getSequences(loads, &loadSequences);
+            
+            // Replace load instructions
+            for (auto &sequence : loadSequences) {
+                Instruction *start = sequence[0];
+                auto VMask = ConstantInt::get(Type::getInt64Ty(mContext), getMask(sequence));
+                vector<Value*> vload8Args = {start->getOperand(0), VMask};
+                Instruction *vload8Call = CallInst::Create(vload8ty, vload8, 
+                                                        vload8Args, "", start);
+                // Create extract8 calls following the vload8
+                for (int i = 0; i < MAXSEQ; ++i) {
+                    if (sequence[i] != nullptr) {
+                        // i : offset from the start, sequence[i] : i'th load instruction in a sequence
+                        auto VIdx = ConstantInt::get(Type::getInt64Ty(mContext), i);
+                        vector<Value*> extract8Args = {vload8Call, VIdx};
+                        auto extract8Call = CallInst::Create(extract8ty, extract8, 
+                                                            extract8Args, "", start);
+                        sequence[i]->replaceAllUsesWith(extract8Call);
+                    }
+                }
+            }
+
+            // Find load instructions accessing sequential memory
+            vector<Instruction*> stores;
+            vector<vector<Instruction*>> storeSequences;
+            getInst(&BB, Instruction::Store, &stores);
+            getSequences(stores, &storeSequences);
+
+            // Replace store instructions
+            for (auto &sequence : storeSequences) {
+                Instruction *start = sequence[0];
+                Value *vsPtr = start->getOperand(1); // Pointer to which values are stored
+                vector<Value*> vsVals; // 8 values to store
+                for (int i = 0; i < MAXSEQ; ++i) {
+                    // Use 0 as a placeholders
+                    auto vsVal = sequence[i] == nullptr ? 
+                    ConstantInt::get(Type::getInt64Ty(mContext), 0) : 
+                    sequence[i]->getOperand(0);
+                    vsVals.push_back(vsVal);
+                }
+                auto VMask = ConstantInt::get(Type::getInt64Ty(mContext), getMask(sequence));
+                vector<Value*> vstore8Args = {vsVals[0], vsVals[1], vsVals[2], 
+                                              vsVals[3], vsVals[4], vsVals[5], 
+                                              vsVals[6], vsVals[7], vsPtr, VMask};
+                Instruction *vstore8Call = CallInst::Create(vstore8ty, vstore8, 
+                                                            vstore8Args, "", start);
+            }
+        }
+    }
 }
 
 PreservedAnalyses AbbrMemPass::run(Module &M, ModuleAnalysisManager &MAM) {
-    addDeclarations(&M);
-    for (auto &F : M) {
-        for (auto &BB : F) {
-            processBasicBlock(&BB);
-        }
-    }
-    /*
-    for (auto &F : M) {
-        for (auto &BB : F) {
-            for (auto &I : BB) {
-                auto &mContext = M.getContext();
-                auto int64PtrType = Type::getInt64PtrTy(mContext);
-                auto int64Type = Type::getInt64Ty(mContext);
-                auto int64VectorType = VectorType::get(int64Type, 8, false);
-                auto voidType = Type::getVoidTy(mContext);
-
-                vector<Type*> funcArgs = {int64Type}; 
-                auto myFuncTy = FunctionType::get(voidType, funcArgs, false); 
-                auto myFunc = Function::Create(myFuncTy, Function::ExternalLinkage, "myFunc", M);
-
-                vector<Value*> callArgs = {ConstantInt::get(Type::getInt64Ty(M.getContext()), 5)};
-                auto myFuncCall = CallInst::Create(myFuncTy, myFunc, callArgs, "", &I);
-            }
-        }
-    }
-    */
-
+    replaceInstructions(&M);
     return PreservedAnalyses::none();
 }
 }

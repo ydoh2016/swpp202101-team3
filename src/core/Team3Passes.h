@@ -32,10 +32,9 @@ private:
   void getInst(BasicBlock *BB, unsigned opCode, vector<Instruction*> *instList);
   void getSequences(const vector<Instruction*> &instList, vector<vector<Instruction*>> *sequences);
   bool isIdentical(Value *V1, Value *V2);
-  void processBasicBlock(BasicBlock *BB);
+  void processModule(Module *M);
   bool inSameSequence(Value *V1, Value *V2, int * difference);
-  void addDeclarations(Module *M);
-  void insertFunctionCall(const vector<vector<Instruction*>> &sequences, BasicBlock *BB);
+  void replaceInstructions(Module *M);
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
