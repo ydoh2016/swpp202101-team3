@@ -11,6 +11,7 @@ using namespace std;
 using namespace llvm;
 
 namespace backend {
+  
 PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
   auto& TLI = FAM.getResult<TargetLibraryAnalysis>(F);
   auto& DL = F.getParent() -> getDataLayout();
@@ -24,6 +25,13 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
           if(callee -> getName().str() == "malloc") {
             // found malloc
             heap_allocation.push_back(call_inst);
+            //if the user of I is return than we assume it a memory allocation func
+            //aka mallocLikeFunc
+            for(auto U : I.users()) {
+              if(auto DD = dyn_cast<ReturnInst>(U)) {
+                mallocLikeFunc.insert(F.getName().str());
+              }
+            }
           }
         }
       }

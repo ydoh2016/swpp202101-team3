@@ -32,9 +32,14 @@ public:
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
 };
 
+#include <set>
+
 class Heap2Stack : public PassInfoMixin<Heap2Stack> {
+  set<string>& mallocLikeFunc;
 public:
+  Heap2Stack(set<string>& mallocLikes):mallocLikeFunc(mallocLikes){};
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+  set<string> getMallocLikes() const { return mallocLikeFunc; }
 };
 }
 

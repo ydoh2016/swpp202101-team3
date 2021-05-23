@@ -124,7 +124,7 @@ PreservedAnalyses Backend::run(Module &M, ModuleAnalysisManager &MAM) {
     exit(1);
   }
 
-  AssemblyEmitter Emitter(os, TM, symbolMap, spOffsetMap);
+  AssemblyEmitter Emitter(os, TM, symbolMap, spOffsetMap, mallocLikeFunc);
   for(Function& F : M){
     if(F.isDeclaration()) continue;
     Emitter.visit(F);
@@ -500,7 +500,41 @@ void Backend::addEdges(BasicBlock &srcBB, BasicBlock &dstBB, SymbolMap &symbolMa
 
 map<Function*, SpInfo> Backend::processAlloca(Module& M, SymbolMap& SM) {
 
+  //to find all deeper malloc-likes
   map<Function*, SpInfo> spOffsetMap;
+  bool found = false;
+  do{
+    found = false;
+    for(Function& F : M) {
+      for(auto& BB : F) {
+        for(auto& I : BB) {
+          AllocaInst* alloca = dyn_cast<AllocaInst>(&I);
+          if(alloca) {
+            spOffsetMap[&F].touched = true;
+          }
+          else {
+            CallInst* callInst = dyn_cast<CallInst>(&I);
+            if(callInst) {
+              Function *callee = callInst->getCalledFunction();
+              if(callee) {
+                if(mallocLikeFunc.find(callee->getName().str()) != mallocLikeFunc.end()) {
+                  spOffsetMap[&F].touched = true;
+                }
+                for(auto U : I.users()) {
+                  if(auto DD = dyn_cast<ReturnInst>(U)) {
+                    if(mallocLikeFunc.find(F.getName().str()) == mallocLikeFunc.end()) {
+                      mallocLikeFunc.insert(F.getName().str());
+                      found = true;
+                    }
+                  }
+                }
+              }
+            }
+          }          
+        }
+      }
+    }    
+  } while(found);
 
   for(Function& F : M) {
     if(F.isDeclaration()) continue;
