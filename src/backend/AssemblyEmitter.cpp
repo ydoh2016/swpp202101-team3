@@ -290,6 +290,23 @@ void AssemblyEmitter::visitCallInst(CallInst& I) {
     }
     else if(Fname == "free") {
         assert(args.size()==1 && "argument of free() should be 1");
+        //to optimize free operation
+        //If it is sure that ptr is on the heap, then call free not _Free
+        //because _Free is expensive than free by about 6 point.
+        auto ii = dyn_cast<Instruction>(I.getArgOperand(0));
+        BitCastInst* bi = dyn_cast<BitCastInst>(ii);
+        while(bi) {
+            ii = dyn_cast<Instruction>(bi->getOperand(0));
+            bi = dyn_cast<BitCastInst>(bi->getOperand(0));
+        }
+        auto ci = dyn_cast<CallInst>(ii);
+        if(ci) {
+            auto calledFunc = ci->getCalledFunction();
+            if(mallocLikeFunc.find(calledFunc->getName().str()) == mallocLikeFunc.end()) {
+                *fout << emitInst({"free", name(I.getArgOperand(0))});        
+                return;
+            }
+        }
         *fout << emitInst({"call", "_Free", name(I.getArgOperand(0))});
     }
     else if(UnfoldVectorInstPass::VLOADS.find(Fname) != UnfoldVectorInstPass::VLOADS.end()) {
