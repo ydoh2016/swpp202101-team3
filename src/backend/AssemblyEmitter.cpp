@@ -139,9 +139,12 @@ void AssemblyEmitter::visitAllocaInst(AllocaInst& I) {
         if(Register* reg = symbol->castToRegister()) {
             
             *fout << emitInst({name(&I), "= call _Alloca", size, reg->getName()});
+            //remove redundant and expensive _SpCal call when ptr returns directly.
+            if(I.hasOneUse()) {
+                auto ri = dyn_cast<ReturnInst>(*(I.user_begin()));
+                    return;
+            }
             *fout << emitInst({"sp", "= call _SpCal", name(&I)});
-            // *fout << emitInst({"sp", "= sub", "sp", reg->getName(), "64"});
-            // *fout << emitInst({name(&I), "= mul", "sp", "1", "64"});
         }
     }
 }
