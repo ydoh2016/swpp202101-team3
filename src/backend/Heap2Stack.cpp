@@ -13,28 +13,59 @@ using namespace llvm;
 namespace backend {
 
   bool checkConv(Function* F, set<string>& mallocLikeFunc) {
+    // outs() << "check " << F->getName().str() << "\n";
     for(auto U : F->users()) {
       auto I = dyn_cast<Instruction>(U);
       if(I){
         Function* caller = I->getFunction();
         if(caller->getNumUses() == 0) {
-          
+          // outs() << "On the terminal\n" << "\n";
         }
         else {
           bool check = false;
-          for(auto U : I->users()) {
-            if(auto DD = dyn_cast<ReturnInst>(U)) {
-              check = checkConv(caller, mallocLikeFunc);
+          bool returnChecked = false;
+          vector<Instruction*> copied;
+          Instruction* ii = I;
+          while(ii) {
+            for(auto U : ii->users()) {
+              if(auto DD = dyn_cast<ReturnInst>(U)) {
+                check = checkConv(caller, mallocLikeFunc);
+                copied.clear();
+                break;
+              }
+              else if(auto DD = dyn_cast<CallInst>(U)) {
+                Function* F = DD->getCalledFunction();
+                string Fname = F->getName().str();
+                if(Fname == "free") {
+                  copied.clear();
+                  check = true;
+                  break;
+                }
+              }
+              else if(auto DD = dyn_cast<BitCastInst>(U)) {
+                copied.push_back(DD);
+              }
             }
+            if(!check) {
+              if(copied.size() > 0) {
+                ii = copied.back();
+                copied.pop_back();
+              }
+              else
+                return false;
+            }
+            else
+              break;
           }
-          if(!check)
-            return false;
         }        
       }
     }
+    // outs() << "congrat " << F->getName().str() << "\n";
     mallocLikeFunc.insert(F->getName().str());
     return true;
   }
+
+
   
 PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
   auto& TLI = FAM.getResult<TargetLibraryAnalysis>(F);
@@ -52,21 +83,23 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
             if(F.getNumUses()<=0)
               heap_allocation.push_back(call_inst);
             else {
-              for(auto U : I.users()) {
-                if(auto DD = dyn_cast<ReturnInst>(U)) {
-                  if(checkConv(&F, mallocLikeFunc)) {
-                    heap_allocation.push_back(call_inst);
-                    break;
-                  }
-                }
-                else if(auto I = dyn_cast<BitCastInst>(U)) {
-                  for(auto U : I->users()) {
-                    if(auto DD = dyn_cast<ReturnInst>(U)) {
-                      if(checkConv(&F, mallocLikeFunc)) {
-                        heap_allocation.push_back(call_inst);
-                        break;
-                      }
+              vector<Instruction*> chk;
+              chk.push_back(&I);
+              while(chk.size() > 0) {
+                auto inst = chk.back();
+                chk.pop_back();
+                for(auto U:inst->users()) {
+                  if(auto DD = dyn_cast<ReturnInst>(U)) {
+                    if(checkConv(&F, mallocLikeFunc)) {
+                      heap_allocation.push_back(call_inst);
+                      break;
                     }
+                  }
+                  else if(auto I = dyn_cast<BitCastInst>(U)) {
+                    chk.push_back(I);
+                  }
+                  else if(auto I = dyn_cast<PHINode>(U)) {
+                    chk.push_back(I);
                   }
                 }
               }
