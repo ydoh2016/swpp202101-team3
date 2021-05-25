@@ -142,6 +142,7 @@ void AssemblyEmitter::visitAllocaInst(AllocaInst& I) {
             //remove redundant and expensive _SpCal call when ptr returns directly.
             if(I.hasOneUse()) {
                 auto ri = dyn_cast<ReturnInst>(*(I.user_begin()));
+                if(ri)
                     return;
             }
             *fout << emitInst({"sp", "= call _SpCal", name(&I)});
