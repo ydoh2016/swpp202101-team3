@@ -102,12 +102,14 @@ bool AbbrMemPass::isIdentical(Value *V1, Value *V2) {
 
 // Check if the two instructions are accessing memories sequence. If so, get their gap.
 bool AbbrMemPass::inSameSequence(Instruction *I1, Instruction *I2, int *difference) {
+    assert(I1->getOpcode() == I2->getOpcode() && "They must have the same opcode");
     // %2 = load i64, [i64* %hptr1]
     // %1 = store i64 10, [i64* %hptr1]
     int pointerIdx = I1->getOpcode() == Instruction::Load ? 0 : 1;
     auto LoadPtr1 = I1->getOperand(pointerIdx);
     auto LoadPtr2 = I2->getOperand(pointerIdx);
 
+    // [%hptr1] = getelementptr inbounds i64, i64* %hptr0, i64 1
     auto ILoadPtr1 = dyn_cast<Instruction>(LoadPtr1);
     auto ILoadPtr2 = dyn_cast<Instruction>(LoadPtr2);
 
@@ -115,11 +117,18 @@ bool AbbrMemPass::inSameSequence(Instruction *I1, Instruction *I2, int *differen
         return false;
     }
 
+    // The getelementptr instructions must have only two operands, where
+    // they process pointers pointing to a single integer.
+    if (ILoadPtr1->getNumOperands() > 2 || ILoadPtr2->getNumOperands() > 2) {
+        return false;
+    }
+
     // %hptr1 = getelementptr inbounds i64, [i64* %hptr0], i64 1
     auto BasePtr1 = ILoadPtr1->getOperand(0);
     auto BasePtr2 = ILoadPtr2->getOperand(0);
 
-    // Are the pointers exactly the same? - this is quite strict
+    // Only deal with cases where the pointers are exactly the same. 
+    // - This is quite a strict condition for I1 and I2 to be in a sequence
     if (BasePtr1 != BasePtr2) { 
         return false;
     }
