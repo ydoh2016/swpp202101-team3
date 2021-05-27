@@ -33,7 +33,7 @@ private:
   void getSequences(const vector<Instruction*> &instList, vector<vector<Instruction*>> *sequences);
   bool isIdentical(Value *V1, Value *V2);
   void processModule(Module *M);
-  bool inSameSequence(Value *V1, Value *V2, int * difference);
+  bool inSameSequence(Instruction *I1, Instruction *I2, int *difference);
   void replaceInstructions(Module *M);
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);

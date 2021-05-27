@@ -100,60 +100,69 @@ bool AbbrMemPass::isIdentical(Value *V1, Value *V2) {
     }
 }
 
-// Check if the two values are in sequence. If so, get their gap.
-bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
-    // %2 = load i64, i64* %hptr1
-    auto I1 = dyn_cast<Instruction>(V1);
-    auto I2 = dyn_cast<Instruction>(V2);
-
+// Check if the two instructions are accessing memories sequence. If so, get their gap.
+bool AbbrMemPass::inSameSequence(Instruction *I1, Instruction *I2, int *difference) {
     // %2 = load i64, [i64* %hptr1]
     // %1 = store i64 10, [i64* %hptr1]
     int pointerIdx = I1->getOpcode() == Instruction::Load ? 0 : 1;
-    auto GP1 = dyn_cast<Instruction>(I1->getOperand(pointerIdx));
-    auto GP2 = dyn_cast<Instruction>(I2->getOperand(pointerIdx));
+    auto LoadPtr1 = I1->getOperand(pointerIdx);
+    auto LoadPtr2 = I2->getOperand(pointerIdx);
 
-    if (!GP1 || !GP2) {
+    auto ILoadPtr1 = dyn_cast<Instruction>(LoadPtr1);
+    auto ILoadPtr2 = dyn_cast<Instruction>(LoadPtr2);
+
+    if (!ILoadPtr1 || !ILoadPtr2) {
         return false;
     }
 
     // %hptr1 = getelementptr inbounds i64, [i64* %hptr0], i64 1
-    auto P1 = GP1->getOperand(0);
-    auto P2 = GP2->getOperand(0);
+    auto BasePtr1 = ILoadPtr1->getOperand(0);
+    auto BasePtr2 = ILoadPtr2->getOperand(0);
 
-    // Are the pointers same?
-    if (P1 != P2) { 
+    // Are the pointers exactly the same? - this is quite strict
+    if (BasePtr1 != BasePtr2) { 
         return false;
     }
 
     // %hptr1 = getelementptr inbounds i64, i64* %hptr0, [i64 1]
-    auto IDX1 = GP1->getOperand(1);
-    auto IDX2 = GP2->getOperand(1);
+    auto AddIdx1 = ILoadPtr1->getOperand(1);
+    auto AddIdx2 = ILoadPtr2->getOperand(1);
 
+    // If they are both constants
     // %hptr1 = getelementptr inbounds i64, i64* %hptr0, [i64 1]
     // %hptr2 = getelementptr inbounds i64, i64* %hptr0, [i64 2]
-    if (isa<ConstantInt>(IDX1) && isa<ConstantInt>(IDX2)) {
-        *difference = dyn_cast<ConstantInt>(IDX2)->getZExtValue() - 
-        dyn_cast<ConstantInt>(IDX1)->getZExtValue();
+    if (isa<ConstantInt>(AddIdx1) && isa<ConstantInt>(AddIdx2)) {
+        *difference = dyn_cast<ConstantInt>(AddIdx2)->getZExtValue() - 
+        dyn_cast<ConstantInt>(AddIdx1)->getZExtValue();
         return true;
     }
 
     // %hptr1 = getelementptr inbounds i64, i64* %hptr0, [i64 %a]
     // %hptr2 = getelementptr inbounds i64, i64* %hptr0, [i64 %b]
-    auto INST1 = dyn_cast<Instruction>(IDX1);
-    auto INST2 = dyn_cast<Instruction>(IDX2);
+    auto IAddIdx1 = dyn_cast<Instruction>(AddIdx1);
+    auto IAddIdx2 = dyn_cast<Instruction>(AddIdx2);
 
-    if (!INST1 || !INST2) {
+    if (!IAddIdx1 || !IAddIdx2) {
         return false;
     }
+
+    // Backup the values in case dyn_cast fails
+    Value *VBackup1 = IAddIdx1;
+    Value *VBackup2 = IAddIdx2;
     // If there are ZExt of SExt, assign their operands to INST1 to skip them
-    if (INST1->getOpcode() == Instruction::ZExt || 
-        INST1->getOpcode() == Instruction::SExt) {
-        INST1 = dyn_cast<Instruction>(INST1->getOperand(0));
+    if (IAddIdx1->getOpcode() == Instruction::ZExt || 
+        IAddIdx1->getOpcode() == Instruction::SExt) {
+        IAddIdx1 = dyn_cast<Instruction>(IAddIdx1->getOperand(0));
     }
-    if (INST2->getOpcode() == Instruction::ZExt || 
-        INST2->getOpcode() == Instruction::SExt) {
-        INST2 = dyn_cast<Instruction>(INST2->getOperand(0));
+    if (IAddIdx2->getOpcode() == Instruction::ZExt || 
+        IAddIdx2->getOpcode() == Instruction::SExt) {
+        IAddIdx2 = dyn_cast<Instruction>(IAddIdx2->getOperand(0));
     }
+
+    if (!IAddIdx1 || !IAddIdx2) {
+        return false;
+    }
+    
     // %a = add i64 %0, 1
     // %b = add i64 1, %1
     // Now the result is: %0 == %1 ? 
@@ -162,15 +171,16 @@ bool AbbrMemPass::inSameSequence(Value *V1, Value *V2, int *difference) {
     ConstantInt *C1;
     ConstantInt *C2;
     // If the operation is not in a form of 'val + constant', return
-    if (!match(INST1, m_Add(m_ConstantInt(C1), m_Value(ADD1))) &&
-        !match(INST1, m_Add(m_Value(ADD1), m_ConstantInt(C1)))) {
+    if (!match(IAddIdx1, m_Add(m_ConstantInt(C1), m_Value(ADD1))) &&
+        !match(IAddIdx1, m_Add(m_Value(ADD1), m_ConstantInt(C1)))) {
          return false;
     }
 
-    if (!match(INST2, m_Add(m_ConstantInt(C2), m_Value(ADD2))) &&
-        !match(INST2, m_Add(m_Value(ADD2), m_ConstantInt(C2)))) {
+    if (!match(IAddIdx2, m_Add(m_ConstantInt(C2), m_Value(ADD2))) &&
+        !match(IAddIdx2, m_Add(m_Value(ADD2), m_ConstantInt(C2)))) {
          return false;
     }
+
     if (!isIdentical(ADD1, ADD2)) {
         return false;
     }
