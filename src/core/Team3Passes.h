@@ -37,6 +37,7 @@ public:
 class Heap2Stack : public PassInfoMixin<Heap2Stack> {
   set<string>& mallocLikeFunc;
 public:
+  bool checkConv(Function* F, set<string>& mallocLikeFunc);
   Heap2Stack(set<string>& mallocLikes):mallocLikeFunc(mallocLikes){};
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
   set<string> getMallocLikes() const { return mallocLikeFunc; }

@@ -11,17 +11,13 @@ using namespace std;
 using namespace llvm;
 
 namespace backend {
-
-  bool checkConv(Function* F, set<string>& mallocLikeFunc) {
+  bool Heap2Stack::checkConv(Function* F, set<string>& mallocLikeFunc) {
     // outs() << "check " << F->getName().str() << "\n";
     for(auto U : F->users()) {
       auto I = dyn_cast<Instruction>(U);
       if(I){
         Function* caller = I->getFunction();
-        if(caller->getNumUses() == 0) {
-          // outs() << "On the terminal\n" << "\n";
-        }
-        else {
+        if(caller->getNumUses() != 0) {
           bool check = false;
           bool returnChecked = false;
           vector<Instruction*> copied;
@@ -60,13 +56,10 @@ namespace backend {
         }        
       }
     }
-    // outs() << "congrat " << F->getName().str() << "\n";
     mallocLikeFunc.insert(F->getName().str());
     return true;
   }
 
-
-  
 PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
   auto& TLI = FAM.getResult<TargetLibraryAnalysis>(F);
   auto& DL = F.getParent() -> getDataLayout();
@@ -95,11 +88,11 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
                       break;
                     }
                   }
-                  else if(auto I = dyn_cast<BitCastInst>(U)) {
-                    chk.push_back(I);
+                  else if(auto BitCastI = dyn_cast<BitCastInst>(U)) {
+                    chk.push_back(BitCastI);
                   }
-                  else if(auto I = dyn_cast<PHINode>(U)) {
-                    chk.push_back(I);
+                  else if(auto PhiI = dyn_cast<PHINode>(U)) {
+                    chk.push_back(PhiI);
                   }
                 }
               }
