@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   //add custom passes
-  if(specificPass == "all" || specificPass == "mergebasicblocks")
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
 
   //add Dead argument elimination
@@ -103,14 +103,14 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
-  if (specificPass == "all" || specificPass == "abbrmem")
+  if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
-  
+
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
   SplitSelfLoopPass().run(*M, MAM);

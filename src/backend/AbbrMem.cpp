@@ -155,9 +155,6 @@ bool AbbrMemPass::inSameSequence(Instruction *I1, Instruction *I2, int *differen
         return false;
     }
 
-    // Backup the values in case dyn_cast fails
-    Value *VBackup1 = IAddIdx1;
-    Value *VBackup2 = IAddIdx2;
     // If there are ZExt of SExt, assign their operands to INST1 to skip them
     if (IAddIdx1->getOpcode() == Instruction::ZExt || 
         IAddIdx1->getOpcode() == Instruction::SExt) {
@@ -262,7 +259,7 @@ void AbbrMemPass::replaceInstructions(Module *M) {
                 }
             }
 
-            // Find load instructions accessing sequential memory
+            // Find store instructions accessing sequential memory
             vector<Instruction*> stores;
             vector<vector<Instruction*>> storeSequences;
             getInst(&BB, Instruction::Store, &stores);
