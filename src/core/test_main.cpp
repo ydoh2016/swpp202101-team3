@@ -42,7 +42,8 @@ TEST(TestDemo, CheckMain) {
   ModuleAnalysisManager MAM;
 
   string str = "tmp.txt";
-  Backend B(str, false);
+  set<string> dict;
+  Backend B(str, dict, false);
   B.run(*M, MAM);
 
   str = readFileIntoString(str);

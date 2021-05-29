@@ -69,7 +69,9 @@ public:
 
   //Register file size of the target machine.
   //static const unsigned REGISTER_CAP = 16;
-  static const unsigned REGISTER_CAP = 32;
+  //As we use r32 as store stack address in system, 
+  //decrease the number of register cap from 32 to 31
+  static const unsigned REGISTER_CAP = 31;
 
   //Finds the registers that need to be spilled
   //and actually spills them by adding alloca, store, and load.
