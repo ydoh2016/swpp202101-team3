@@ -36,10 +36,17 @@ Makefile
 
 # Object and Binary files
 obj
-bin
+bin/sf-compiler
+bin/sf-compiler-tests
+
+# assembly files
+*.s
 
 # Editor
 .vscode
 
 # FileCheck output
 .tmp.s
+
+# cost log file
+*.log

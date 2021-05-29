@@ -18,15 +18,6 @@ using namespace std;
 using namespace llvm::PatternMatch;
 
 namespace backend {
-class MergeBasicBlocksPass : public PassInfoMixin<MergeBasicBlocksPass> {
-private:
-  pair<BasicBlock *, BasicBlock *> classifyMergeType(BasicBlock *BB);
-  void mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc);
-  void removeDanglingPhi(Function *F);
-public:
-  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
-};
-
 class ConstantFolding : public PassInfoMixin<ConstantFolding> {
 public:
   bool foldICmp(ICmpInst::Predicate Pred, ConstantInt* C1, ConstantInt* C2);
@@ -56,6 +47,5 @@ private:
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
-}
 
 #endif
