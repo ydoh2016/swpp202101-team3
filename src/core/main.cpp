@@ -16,12 +16,10 @@
 #include "llvm/Transforms/IPO/DeadArgumentElimination.h"
 //add header for Dead code elimination
 #include "llvm/Transforms/Scalar/ADCE.h"
-//add header for Branch-related optimizations including br -> switch
-#include "llvm/Transforms/Scalar/SimplifyCFG.h"
-//add header for Loop invariant code motion
-#include "llvm/Transforms/Scalar/LICM.h"
 //add header for Tail call elimination
 #include "llvm/Transforms/Scalar/TailRecursionElimination.h"
+// add header for gvn
+#include "llvm/Transforms/Scalar/GVN.h"
 
 #include <string>
 
@@ -88,13 +86,15 @@ int main(int argc, char *argv[]) {
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
+  if(specificPass == "all" || specificPass == "gvn")
+    FPM.addPass(GVN());
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   FunctionPassManager FPM3;
 
   //add custom passes
-  if(specificPass == "all" || specificPass == "mergebasicblocks")
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
 
   //add Dead argument elimination
@@ -108,17 +108,17 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack(malloc_like_func));
 
+  if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
+    MPM.addPass(AbbrMemPass());
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
-  
-  
+
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
-
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
   LivenessAnalysis().run(*M, MAM);
