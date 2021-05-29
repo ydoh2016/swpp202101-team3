@@ -5,7 +5,6 @@
 #include "../backend/GEPUnpack.h"
 #include "../backend/RegisterSpill.h"
 #include "../backend/UnfoldVectorInst.h"
-#include "../backend/ConstantFolding.h"
 #include "../backend/SplitSelfLoop.h"
 
 #include "llvm/AsmParser/Parser.h"
@@ -92,6 +91,8 @@ int main(int argc, char *argv[]) {
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
+  FunctionPassManager FPM3;
+
   //add custom passes
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
@@ -103,6 +104,10 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
+  set<string> malloc_like_func;
+  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
+    FPM3.addPass(Heap2Stack(malloc_like_func));
+
   if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
@@ -110,6 +115,7 @@ int main(int argc, char *argv[]) {
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
 
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
@@ -121,6 +127,7 @@ int main(int argc, char *argv[]) {
   ConstExprRemovePass().run(*M, MAM);
   GEPUnpackPass().run(*M, MAM);
   RegisterSpillPass().run(*M, MAM);
+
   // use this for debugging
   if(outputDbg != "no") {    
     outs() << "debug output for " + specificPass + " into " + outputDbg + "\n";
@@ -131,7 +138,7 @@ int main(int argc, char *argv[]) {
   }
 
   // execute backend to emit assembly
-  Backend B(optOutput, optPrintProgress);
+  Backend B(optOutput, malloc_like_func, optPrintProgress);
   B.run(*M, MAM);
   
   return 0;

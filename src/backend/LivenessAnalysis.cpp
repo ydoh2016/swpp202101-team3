@@ -9,8 +9,9 @@ namespace backend
 //---------------------------------------------------------------
 //class RegisterGraph
 //---------------------------------------------------------------
+//dynamic alloca should be considerred, so remark it.
 set<unsigned int> RegisterGraph::DO_NOT_CONSIDER = {Instruction::Store,
-                                                    Instruction::Alloca,
+                                                    // Instruction::Alloca,
                                                     Instruction::Ret,
                                                     Instruction::Switch,
                                                     Instruction::Br};
@@ -427,6 +428,14 @@ unsigned RegisterGraph::findValue(Value* V) {
 bool RegisterGraph::doNotConsider(Instruction &I)
 {
     if (DO_NOT_CONSIDER.find(I.getOpcode())!=DO_NOT_CONSIDER.end()) return true;
+
+    if(I.getOpcode() == Instruction::Alloca){
+        AllocaInst* ai = dyn_cast<AllocaInst>(&I);
+        //static alloca should not be considerred.
+        if(ai->isStaticAlloca())
+            return true;
+    }
+
 
     CallInst *CI = dyn_cast<CallInst>(&I);
     if (!CI) return false;

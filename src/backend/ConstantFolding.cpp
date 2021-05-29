@@ -1,4 +1,4 @@
-#include "ConstantFolding.h"
+#include "../core/Team3Passes.h"
 
 using namespace std;
 using namespace llvm;
@@ -133,6 +133,6 @@ PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM
         }
       }
     }
-  return PreservedAnalyses::none();
+  return PreservedAnalyses::all();
 }
 }
