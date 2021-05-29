@@ -47,5 +47,6 @@ private:
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
+};
 
 #endif
