@@ -56,8 +56,8 @@ done
 if (( $(echo "${total[0]} < 0" |bc -l) )); then
     echo ""
     echo ""
-    echo "COST LARGER THAN BEFORE!" 1>&2
-    exit 1
+    echo "COST LARGER THAN BEFORE!"
+    exit 0
 else
     echo ""
     echo ""
