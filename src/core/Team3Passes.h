@@ -40,7 +40,8 @@ public:
   bool checkConv(Function* F, set<string>& mallocLikeFunc);
   Heap2Stack(set<string>& mallocLikes):mallocLikeFunc(mallocLikes){};
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
-  set<string> getMallocLikes() const { return mallocLikeFunc; }
+  set<string> getMallocLikes() const { return mallocLikeFunc; };
+};
 
 class AbbrMemPass : public PassInfoMixin<AbbrMemPass> {
 private:

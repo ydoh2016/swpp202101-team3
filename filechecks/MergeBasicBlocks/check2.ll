@@ -10,22 +10,14 @@ bb_1:
   %a = sub i32 %arg2, %arg3
   br i1 %cond1, label %bb_2, label %bb_3
 
-; bb_2 and bb_3 proceed to bb_4 unconditionally but does not dominate it.
-; Merge (bb_2, bb_4) and (bb_3, bb_4), then keep bb_4 as it was.
-
+; Do not optimize because there is a phi node in bb_4
 bb_2:
+;CHECK: br .bb_4
   br label %bb_4
-;CHECK: mul arg1 arg2 32
-;CHECK-NEXT: add arg1 [[R1:r[0-9]]] 32
-;CHECK-NEXT: ret [[R1]]
-;CHECK-NOT: br [[BB4:.bb_[0-9]]]
 
 bb_3:
+;CHECK: br .bb_4
   br label %bb_4
-;CHECK: mul arg1 arg2 32
-;CHECK-NEXT: add arg2 [[R2:r[0-9]]] 32
-;CHECK-NEXT: ret [[R2]]
-;CHECK-NOT: br [[BB5:.bb_[0-9]]]
 
 bb_4:
   %p = phi i32 [%arg1, %bb_2], [%arg2, %bb_3]
