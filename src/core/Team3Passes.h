@@ -56,6 +56,13 @@ private:
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
+
+class InliningPass : public PassInfoMixin<InliningPass> {
+private:
+  void getFunctionCalls(vector<CallInst> *calls);
+public:
+  PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
+};
 }
 
 #endif
