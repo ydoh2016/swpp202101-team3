@@ -23,9 +23,20 @@ namespace backend {
 //---------------------------------------------------------------
 //backend/TargetMachine.cpp
 //---------------------------------------------------------------
+//change magic number 32 as user_register_num
+//As we use r32 as the dynamic allocated stack's point,
+//the number is changed from 32 to 31
+#define USER_REGISTER_NUM 31
 
 class Memory;
 class Register;
+
+//If dynamically allocated to the stack, we can't get acc, so we need
+//touched information.
+struct SpInfo {
+  unsigned acc = 0;
+  bool touched = false;
+};
 
 class Symbol{
 protected:
@@ -74,8 +85,10 @@ public:
 };
 
 class TargetMachine {
-  Register* regfile[32];
+  Register* regfile[USER_REGISTER_NUM];
   Register* argfile[16];
+  //added register for check the dynamically allocated stack addr
+  Register* fpreg;
   Register* spreg;
   Register* gvpreg;
   Register* fakereg;
@@ -87,6 +100,7 @@ public:
   Register* sp();
   Register* gvp();
   Register* fakeReg();
+  Register* fp();
 
   unsigned regNo(Symbol*);
   unsigned argNo(Symbol*);
@@ -109,7 +123,7 @@ class AssemblyEmitter : public InstVisitor<AssemblyEmitter> {
 
   //Input IR characteristics
   SymbolMap* SM;
-  map<Function*, unsigned> spOffset;
+  map<Function*, SpInfo> spOffset;
 
   //interface from values to string names of assigned symbols.
   //references SM to find the assignee.
@@ -122,9 +136,10 @@ class AssemblyEmitter : public InstVisitor<AssemblyEmitter> {
 
   //updates the bandwidth and returns the value.
   string stringBandWidth(Value*);
+  set<string> mallocLikeFunc;
 
 public:
-  AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, unsigned>& spOffset);
+  AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes);
 
   //Visit functions; should statically override.
   void visitFunction(Function&);
@@ -179,19 +194,20 @@ class Backend : public PassInfoMixin<Backend> {
   bool printProcess;
   //Model for the target machine of our project.
   //Contains information about register files and 
-  TargetMachine TM;  
+  TargetMachine TM; 
+  set<string> mallocLikeFunc;
 
 public:
 
-  Backend(string outputFile, bool printProcess = false) :
-      outputFile(outputFile), printProcess(printProcess), TM() {}
+  Backend(string outputFile, set<string>& mallocLikes, bool printProcess = false) :
+      outputFile(outputFile), printProcess(printProcess), TM(), mallocLikeFunc(mallocLikes) {}
   
   //runs the backend, which emits the assembly to given .s file.
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &MAM);
 
   //SymbolMap initially does not mark alloca and its derivatives.
   //processing should be seperately done.
-  map<Function*, unsigned> processAlloca(Module&, SymbolMap&);
+  map<Function*, SpInfo> processAlloca(Module&, SymbolMap&);
   void SSAElimination(Module &, SymbolMap &, RegisterGraph &);
   void ElimBackendMovInst(Module &, SymbolMap &);
   void addEdges(BasicBlock &, BasicBlock &, SymbolMap &, vector<vector<Symbol *>> &);

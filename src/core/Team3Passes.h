@@ -8,6 +8,7 @@
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/IR/Instructions.h"
 
 #include <utility>
 
@@ -22,6 +23,24 @@ private:
   void mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc);
 public:
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+};
+
+class ConstantFolding : public PassInfoMixin<ConstantFolding> {
+public:
+  bool foldICmp(ICmpInst::Predicate Pred, ConstantInt* C1, ConstantInt* C2);
+  bool checkConstant(Value* X, Value* Y);
+  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+};
+
+#include <set>
+
+class Heap2Stack : public PassInfoMixin<Heap2Stack> {
+  set<string>& mallocLikeFunc;
+public:
+  bool checkConv(Function* F, set<string>& mallocLikeFunc);
+  Heap2Stack(set<string>& mallocLikes):mallocLikeFunc(mallocLikes){};
+  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+  set<string> getMallocLikes() const { return mallocLikeFunc; }
 };
 }
 

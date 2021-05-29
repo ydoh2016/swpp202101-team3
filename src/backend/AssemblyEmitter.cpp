@@ -47,8 +47,45 @@ string AssemblyEmitter::stringBandWidth(Value* v) {
     return to_string(getBitWidth(v->getType()));
 }
 
-AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, unsigned>& spOffset) :
-            fout(fout), TM(&TM), SM(&SM), spOffset(spOffset) {}
+AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes) :
+            fout(fout), TM(&TM), SM(&SM), spOffset(spOffset), mallocLikeFunc(mallocLikes) {
+    //base assembly code for heap to stack
+    //if there's not enough space, it will do malloc
+    *fout << "start _Alloca 2:\n"
+    "._defaultBB0:\n"
+    "  r1 = mul arg1 arg2 64\n"
+    "  r2 = sub sp r1 64\n"
+    "  r3 = icmp slt r2 10000 64\n"
+    "  br r3 ._malloc ._alloca\n"
+    "._malloc:\n"
+    "  r2 = malloc r1\n"
+    "  ret r2\n"
+    "._alloca:\n"
+    "  ret r2\n"
+    "end _Alloca\n"
+    "\n"
+    "start _SpCal 1:\n"
+    "  ._defaultBB0:\n"
+    "  r1 = icmp ugt arg1 102400 64\n"
+    "  br r1 ._malloc ._alloca\n"
+    "._malloc:\n"
+    "  ret sp\n"
+    "._alloca:\n"
+    "  ret arg1\n"
+    "end _SpCal\n"
+    "\n"
+    "start _Free 1:\n"
+    "  ._defaultBB0:\n"
+    "  r1 = icmp ugt arg1 102400 64\n"
+    "  br r1 ._malloc ._alloca\n"
+    "._malloc:\n"
+    "  free arg1\n"
+    "  ret\n"
+    "._alloca:\n"
+    "  ret\n"
+    "end _Free\n"
+    "\n";
+}
 
 void AssemblyEmitter::visitFunction(Function& F) {
     //print the starting code.
@@ -74,9 +111,12 @@ void AssemblyEmitter::visitBasicBlock(BasicBlock& BB) {
                 }
             }
         }
-        if(spOffset[BB.getParent()] != 0) {
+        if(spOffset[BB.getParent()].touched) {
             *fout << "  ; Init stack pointer\n";
-            *fout << emitInst({"sp = sub sp",to_string(spOffset[BB.getParent()]),"64"});
+            if(spOffset[BB.getParent()].acc > 0) {
+                *fout << emitInst({"sp = sub sp",to_string(spOffset[BB.getParent()].acc),"64"});
+            }
+            *fout << emitInst({"r32 = mul sp", "1","64"});
         }
     }
 }
@@ -88,7 +128,26 @@ void AssemblyEmitter::visitICmpInst(ICmpInst& I) {
 
 //Alloca inst.
 void AssemblyEmitter::visitAllocaInst(AllocaInst& I) {
-    //Do nothing.
+    
+    Value* ptr = I.getArraySize();
+    string size = to_string(getAccessSize(I.getAllocatedType()));
+    Symbol* symbol = SM->get(ptr);
+    if(I.isStaticAlloca()) {
+        
+    }
+    else if(symbol) {
+        if(Register* reg = symbol->castToRegister()) {
+            
+            *fout << emitInst({name(&I), "= call _Alloca", size, reg->getName()});
+            //remove redundant and expensive _SpCal call when ptr returns directly.
+            if(I.hasOneUse()) {
+                auto ri = dyn_cast<ReturnInst>(*(I.user_begin()));
+                if(ri)
+                    return;
+            }
+            *fout << emitInst({"sp", "= call _SpCal", name(&I)});
+        }
+    }
 }
 
 //Memory Access insts.
@@ -99,8 +158,8 @@ void AssemblyEmitter::visitLoadInst(LoadInst& I) {
     Symbol* symbol = SM->get(ptr);
     //if pointer operand is a memory value(GV or alloca),
     if(Memory* mem = symbol->castToMemory()) {
-        if(mem->getBase() == TM->sp()) {
-            *fout << emitInst({name(&I), "= load", size ,"sp", to_string(mem->getOffset())});
+        if(mem->getBase() == TM->fp()) {
+            *fout << emitInst({name(&I), "= load", size, mem->getBase()->getName(), to_string(mem->getOffset())});
         }
         else if(mem->getBase() == TM->gvp()) {
             *fout << emitInst({name(&I), "= load", size, "204800", to_string(mem->getOffset())});
@@ -121,8 +180,8 @@ void AssemblyEmitter::visitStoreInst(StoreInst& I) {
     Symbol* symbol = SM->get(ptr);
     //if pointer operand is a memory value(GV or alloca),
     if(Memory* mem = symbol->castToMemory()) {
-        if(mem->getBase() == TM->sp()) {
-            *fout << emitInst({"store", size, name(val), "sp", to_string(mem->getOffset())});
+        if(mem->getBase() == TM->fp()) {
+            *fout << emitInst({"store", size, name(val), mem->getBase()->getName(), to_string(mem->getOffset())});
         }
         else if(mem->getBase() == TM->gvp()) {
             *fout << emitInst({"store", size, name(val), "204800", to_string(mem->getOffset())});
@@ -169,8 +228,8 @@ void AssemblyEmitter::visitPtrToIntInst(PtrToIntInst& I) {
     //if pointer operand is a memory value(GV or alloca),
     if(symbol) {
         if(Memory* mem = symbol->castToMemory()) {
-            if(mem->getBase() == TM->sp()) {
-                *fout << emitBinary(&I, "add", "sp", to_string(mem->getOffset()));
+            if(mem->getBase() == TM->fp()) {
+                *fout << emitBinary(&I, "add", mem->getBase()->getName(), to_string(mem->getOffset()));
             }
             else if(mem->getBase() == TM->gvp()) {
                 *fout << emitBinary(&I, "add", "204800", to_string(mem->getOffset()));
@@ -222,13 +281,37 @@ void AssemblyEmitter::visitCallInst(CallInst& I) {
     for(Use& arg : I.args()) {
         args.push_back(name(arg.get()));
     }
-    if(Fname == "malloc") {
+    //Find all memory allocation call, apply special stack pointer update call
+    if(mallocLikeFunc.find(Fname) != mallocLikeFunc.end()) {
+        vector<string> printlist = {name(&I), "= call", Fname};
+        printlist.insert(printlist.end(), args.begin(), args.end());
+        *fout << emitInst(printlist);
+        *fout << emitInst({"sp", "= call _SpCal", name(&I)});
+    }
+    else if(Fname == "malloc") {
         assert(args.size()==1 && "argument of malloc() should be 1");
         *fout << emitInst({name(&I), "= malloc", name(I.getArgOperand(0))});
     }
     else if(Fname == "free") {
         assert(args.size()==1 && "argument of free() should be 1");
-        *fout << emitInst({"free", name(I.getArgOperand(0))});
+        //to optimize free operation
+        //If it is sure that ptr is on the heap, then call free not _Free
+        //because _Free is expensive than free by about 6 point.
+        auto ii = dyn_cast<Instruction>(I.getArgOperand(0));
+        BitCastInst* bi = dyn_cast<BitCastInst>(ii);
+        while(bi) {
+            ii = dyn_cast<Instruction>(bi->getOperand(0));
+            bi = dyn_cast<BitCastInst>(bi->getOperand(0));
+        }
+        auto ci = dyn_cast<CallInst>(ii);
+        if(ci) {
+            auto calledFunc = ci->getCalledFunction();
+            if(mallocLikeFunc.find(calledFunc->getName().str()) == mallocLikeFunc.end()) {
+                *fout << emitInst({"free", name(I.getArgOperand(0))});        
+                return;
+            }
+        }
+        *fout << emitInst({"call", "_Free", name(I.getArgOperand(0))});
     }
     else if(UnfoldVectorInstPass::VLOADS.find(Fname) != UnfoldVectorInstPass::VLOADS.end()) {
         vector<string> asmb;
@@ -305,9 +388,13 @@ void AssemblyEmitter::visitCallInst(CallInst& I) {
 void AssemblyEmitter::visitReturnInst(ReturnInst& I) {
     //increase sp(which was decreased in the beginning of the function.)
     Function* F = I.getFunction();
-    if(spOffset[F] > 0) {
-        *fout << emitInst({"sp = add sp",to_string(spOffset[F]),"64"});
-    }
+    // From the calling convention - which says after the call returns, r1~r32, sp registers are automatically restored
+    // We don't need following calculations.
+    // if(spOffset[F].touched)
+    //     *fout << emitInst({"sp = mul r32",to_string(1),"64"});
+    // if(spOffset[F].acc > 0) {
+    //     *fout << emitInst({"sp = add sp",to_string(spOffset[F].acc),"64"});
+    // }
     *fout << emitInst({"ret", name(I.getReturnValue())});
 }
 void AssemblyEmitter::visitBranchInst(BranchInst& I) {

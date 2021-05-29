@@ -19,6 +19,9 @@ Register* TargetMachine::arg(unsigned index) {
 Register* TargetMachine::sp() {
     return spreg;
 }
+Register* TargetMachine::fp() {
+    return fpreg;
+}
 Register* TargetMachine::gvp() {
     return gvpreg;
 }
@@ -26,7 +29,7 @@ Register* TargetMachine::fakeReg() {
     return fakereg;
 }
 unsigned TargetMachine::regNo(Symbol* symbol) {
-    for(int i = 0; i < 32; i++) {
+    for(int i = 0; i < USER_REGISTER_NUM; i++) {
         if(symbol == regfile[i]) return i;
     }
     return -1;
@@ -43,7 +46,7 @@ bool TargetMachine::valid(Symbol* symbol) {
             for(int i = 0; i < 16; i++) {
             if(argfile[i] == symbol) return true;
             }
-            for(int i = 0; i < 32; i++) {
+            for(int i = 0; i < USER_REGISTER_NUM; i++) {
             if(regfile[i] == symbol) return true;
             }
             if(spreg == symbol) return true;
@@ -62,9 +65,10 @@ TargetMachine::TargetMachine() {
     for(int i = 0; i < 16; i++) {
         argfile[i] = new Register("arg"+to_string(i+1));
     }
-    for(int i = 0; i < 32; i++) {
+    for(int i = 0; i < USER_REGISTER_NUM; i++) {
         regfile[i] = new Register("r"+to_string(i+1));
     }
+    fpreg = new Register("r32");
     spreg = new Register("sp");
     gvpreg = new Register("gvp");
     fakereg = new Register("fake");
