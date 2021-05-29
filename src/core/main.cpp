@@ -7,6 +7,7 @@
 #include "../backend/UnfoldVectorInst.h"
 #include "../backend/SplitSelfLoop.h"
 
+#include "llvm/Support/CommandLine.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/raw_os_ostream.h"
@@ -34,16 +35,32 @@ using namespace backend;
 //Currently adce, dae, licm, simplifyCFG, tailCallElim supported
 //outputDbgfile is optimized ir file.
 
+static cl::opt<string> optInput(
+    cl::Positional, cl::desc("<input bitcode file>"), cl::Required,
+    cl::value_desc("filename"));
+
+static cl::opt<string> optOutput(
+    cl::Positional, cl::desc("<output assembly file>"), cl::value_desc("filename"),
+    cl::init(""));
+
+static cl::opt<string> specificPass(
+    cl::Positional, cl::desc("<select specific pass>"), cl::value_desc("pass_name"),
+    cl::init(""));
+
+cl::opt<string> outputDbg ("debug-file", cl::value_desc("filename"), cl::desc("make debug file in <filename>"));
+
 int main(int argc, char *argv[]) {
   //Parse command line arguments
-  if(argc < 3) return -1;
-  string optInput = argv[1];
-  string optOutput = argv[2];
-  string specificPass = argc > 3 ? argv[3] : "all";
-  string outputDbg = argc > 4 ? argv[4] : "no";
-  std::transform(specificPass.begin(), specificPass.end(),specificPass.begin(), ::tolower);
-  
+  cl::ParseCommandLineOptions(argc, argv);
+  if (optOutput == "")
+      optOutput = ".tmp.s";
+  if (specificPass == "")
+      specificPass = "all";
+  if (outputDbg == "")
+      outputDbg = "no";
   bool optPrintProgress = false;
+
+  std::transform(specificPass.begin(), specificPass.end(),specificPass.begin(), ::tolower);
 
   //Parse input LLVM IR module
   LLVMContext Context;
@@ -81,13 +98,11 @@ int main(int argc, char *argv[]) {
 
   // add existing passes
   //add Dead code Elimination
-  if(specificPass == "all" || specificPass == "adce")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "adce")  
     FPM.addPass(ADCEPass());
   //add  Tail call elimination
-  if(specificPass == "all" || specificPass == "tailcallelim")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
-  if(specificPass == "all" || specificPass == "gvn")
-    FPM.addPass(GVN());
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
@@ -98,11 +113,12 @@ int main(int argc, char *argv[]) {
     FPM1.addPass(MergeBasicBlocksPass());
 
   //add Dead argument elimination
-  if(specificPass == "all" || specificPass == "dae")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
-  if(specificPass == "all" || specificPass == "constantfolding")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
+
 
   set<string> malloc_like_func;
   if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
