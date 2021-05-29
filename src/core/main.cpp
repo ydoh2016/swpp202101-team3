@@ -85,16 +85,9 @@ int main(int argc, char *argv[]) {
   //add Dead code Elimination
   if(specificPass == "all" || specificPass == "adce")  
     FPM.addPass(ADCEPass());
-  //add Branch-related optimizations including br -> switch
-  if(specificPass == "all" || specificPass == "simplifycfg")  
-    FPM.addPass(SimplifyCFGPass());
-  //add Loop invariant code motion
-  if(specificPass == "all" || specificPass == "licm")  
-    FPM.addPass(createFunctionToLoopPassAdaptor(LICMPass()));
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
-  //add Dead argument elimination
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
@@ -104,6 +97,7 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
 
+  //add Dead argument elimination
   if(specificPass == "all" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
@@ -113,6 +107,7 @@ int main(int argc, char *argv[]) {
   set<string> malloc_like_func;
   if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack(malloc_like_func));
+
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
