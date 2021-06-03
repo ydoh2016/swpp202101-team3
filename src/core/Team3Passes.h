@@ -59,7 +59,9 @@ public:
 
 class InliningPass : public PassInfoMixin<InliningPass> {
 private:
-  void getFunctionCalls(vector<CallInst> *calls);
+  void getFunctionCalls(Module *M, vector<CallInst*> *calls);
+  void cloneIntoCaller(CallInst *call);
+  void divideBasicBlock(Instruction *criteria);
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
