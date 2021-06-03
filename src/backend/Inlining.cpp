@@ -20,7 +20,8 @@ void InliningPass::getFunctionCalls(Module *M, vector<CallInst*> *calls) {
         for (inst_iterator IT = inst_begin(&F), E = inst_end(&F); IT != E; ++IT) {
             Instruction *I = &*IT;
             CallInst *CI = dyn_cast<CallInst>(I);
-            if (CI != nullptr) {
+            if (CI != nullptr && CI->getCalledFunction()->hasExactDefinition()) {
+                outs() << CI->getName() << "\n";
                 calls->push_back(CI);
             }
         }
@@ -42,13 +43,12 @@ void InliningPass::divideBasicBlock(Instruction *criteria) {
 
     vector<Instruction*> IAfter;
     bool callInstSeen = false;
-
     for (Instruction &I : *BBAfter) {
-        if (dyn_cast<Instruction>(&I) == criteria) {
-            callInstSeen = true;
-        }
-        if (callInstSeen) {
+        if (!callInstSeen) {
             IAfter.push_back(&I);
+        }
+        if (VMAfter[criteria] == &I) {
+            callInstSeen = true;
         }
     }
 
