@@ -56,6 +56,11 @@ private:
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
+
+class LoopInterchange : public PassInfoMixin<LoopInterchange> {
+public:
+  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+};
 }
 
 #endif
