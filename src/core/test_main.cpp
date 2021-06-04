@@ -24,7 +24,6 @@ string readFileIntoString(const string& path) {
     return string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
 }
 
-
 TEST(TestDemo, CheckMain) {
   // Show that the assembler correctly emits 'start main 0' as well as 'end main'
   LLVMContext Context;
@@ -51,6 +50,16 @@ TEST(TestDemo, CheckMain) {
   EXPECT_NE(str.find("start main 0:"), string::npos);
   EXPECT_NE(str.find("end main"), string::npos);
 }
+
+
+// TEST(InstructionRedundancyTest, MergeBlock1) {
+//   LLVMContext Context;
+//   SMDiagnostic Error;
+//   unique_ptr<Module> M = parseAssemblyFile("./filechecks/MergeBasicBlocks/check1.ll", Error, Context);
+//   ASSERT_TRUE(M);
+
+  
+// }
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -10,6 +10,7 @@
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/IR/Instructions.h"
 
+#include <set>
 #include <utility>
 
 using namespace llvm;
@@ -21,6 +22,7 @@ class MergeBasicBlocksPass : public PassInfoMixin<MergeBasicBlocksPass> {
 private:
   pair<BasicBlock *, BasicBlock *> classifyMergeType(BasicBlock *BB);
   void mergeSafely(Function *F, const DominatorTree &DT, BasicBlock *BBPred, BasicBlock *BBSucc);
+  void removeDanglingPhi(Function *F);
 public:
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
 };
@@ -32,15 +34,27 @@ public:
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
 };
 
-#include <set>
-
 class Heap2Stack : public PassInfoMixin<Heap2Stack> {
   set<string>& mallocLikeFunc;
 public:
   bool checkConv(Function* F, set<string>& mallocLikeFunc);
   Heap2Stack(set<string>& mallocLikes):mallocLikeFunc(mallocLikes){};
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
-  set<string> getMallocLikes() const { return mallocLikeFunc; }
+  set<string> getMallocLikes() const { return mallocLikeFunc; };
+};
+
+class AbbrMemPass : public PassInfoMixin<AbbrMemPass> {
+private:
+  static int MAXSEQ;
+  int getMask(const vector<Instruction*> &sequence);
+  void getInst(BasicBlock *BB, unsigned opCode, vector<Instruction*> *instList);
+  void getSequences(const vector<Instruction*> &instList, vector<vector<Instruction*>> *sequences);
+  bool isIdentical(Value *V1, Value *V2);
+  void processModule(Module *M);
+  bool inSameSequence(Instruction *I1, Instruction *I2, int *difference);
+  void replaceInstructions(Module *M);
+public:
+  PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
 }
 

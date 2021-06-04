@@ -7,6 +7,7 @@
 #include "../backend/UnfoldVectorInst.h"
 #include "../backend/SplitSelfLoop.h"
 
+#include "llvm/Support/CommandLine.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/raw_os_ostream.h"
@@ -16,12 +17,10 @@
 #include "llvm/Transforms/IPO/DeadArgumentElimination.h"
 //add header for Dead code elimination
 #include "llvm/Transforms/Scalar/ADCE.h"
-//add header for Branch-related optimizations including br -> switch
-#include "llvm/Transforms/Scalar/SimplifyCFG.h"
-//add header for Loop invariant code motion
-#include "llvm/Transforms/Scalar/LICM.h"
 //add header for Tail call elimination
 #include "llvm/Transforms/Scalar/TailRecursionElimination.h"
+// add header for gvn
+#include "llvm/Transforms/Scalar/GVN.h"
 
 #include <string>
 
@@ -36,16 +35,32 @@ using namespace backend;
 //Currently adce, dae, licm, simplifyCFG, tailCallElim supported
 //outputDbgfile is optimized ir file.
 
+static cl::opt<string> optInput(
+    cl::Positional, cl::desc("<input bitcode file>"), cl::Required,
+    cl::value_desc("filename"));
+
+static cl::opt<string> optOutput(
+    cl::Positional, cl::desc("<output assembly file>"), cl::value_desc("filename"),
+    cl::init(""));
+
+static cl::opt<string> specificPass(
+    cl::Positional, cl::desc("<select specific pass>"), cl::value_desc("pass_name"),
+    cl::init(""));
+
+cl::opt<string> outputDbg ("debug-file", cl::value_desc("filename"), cl::desc("make debug file in <filename>"));
+
 int main(int argc, char *argv[]) {
   //Parse command line arguments
-  if(argc < 3) return -1;
-  string optInput = argv[1];
-  string optOutput = argv[2];
-  string specificPass = argc > 3 ? argv[3] : "all";
-  string outputDbg = argc > 4 ? argv[4] : "no";
-  std::transform(specificPass.begin(), specificPass.end(),specificPass.begin(), ::tolower);
-  
+  cl::ParseCommandLineOptions(argc, argv);
+  if (optOutput == "")
+      optOutput = ".tmp.s";
+  if (specificPass == "")
+      specificPass = "all";
+  if (outputDbg == "")
+      outputDbg = "no";
   bool optPrintProgress = false;
+
+  std::transform(specificPass.begin(), specificPass.end(),specificPass.begin(), ::tolower);
 
   //Parse input LLVM IR module
   LLVMContext Context;
@@ -83,51 +98,47 @@ int main(int argc, char *argv[]) {
 
   // add existing passes
   //add Dead code Elimination
-  if(specificPass == "all" || specificPass == "adce")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "adce")  
     FPM.addPass(ADCEPass());
-  //add Branch-related optimizations including br -> switch
-  if(specificPass == "all" || specificPass == "simplifycfg")  
-    FPM.addPass(SimplifyCFGPass());
-  //add Loop invariant code motion
-  if(specificPass == "all" || specificPass == "licm")  
-    FPM.addPass(createFunctionToLoopPassAdaptor(LICMPass()));
   //add  Tail call elimination
-  if(specificPass == "all" || specificPass == "tailcallelim")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
-  //add Dead argument elimination
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   FunctionPassManager FPM3;
 
   //add custom passes
-  if(specificPass == "all" || specificPass == "mergebasicblocks")
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
 
-  if(specificPass == "all" || specificPass == "dae")  
+  //add Dead argument elimination
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
-  if(specificPass == "all" || specificPass == "constantfolding")  
+  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
   set<string> malloc_like_func;
   if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack(malloc_like_func));
 
+  set<string> malloc_like_func;
+  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
+    FPM3.addPass(Heap2Stack(malloc_like_func));
+
+  if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
+    MPM.addPass(AbbrMemPass());
+
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
-  
-  
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
-
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
-  LivenessAnalysis().run(*M, MAM);
-  SpillCostAnalysis().run(*M, MAM);
   AddressArgCastPass().run(*M, MAM);
   ConstExprRemovePass().run(*M, MAM);
   GEPUnpackPass().run(*M, MAM);

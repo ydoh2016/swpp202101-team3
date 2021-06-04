@@ -6,12 +6,14 @@ if [ "$#" -ne 1 ]; then
 fi
 
 echo "--- Start FileCheck.. ---"
-set -e
+echo ""
 
 failed_opts=()
 
 for p in `ls -1 ./filechecks`; do
   echo "== Testing Optimizer ${p} =="
+  PASSED=0
+  TOTAL=0
   for i in `find ./filechecks/${p} -name "*.ll"` ; do
     echo $i
     timeout 60 bin/sf-compiler $i .tmp.s ${p}
@@ -31,10 +33,15 @@ for p in `ls -1 ./filechecks`; do
     $1 $i < .tmp.s
     if [[ "$?" -eq 0 ]]; then
       echo 'FILE_CHECK: PASSED'
+      PASSED=$((PASSED+1))
     else
       failed_opts+=("$i")
     fi
+    TOTAL=$((TOTAL+1))
   done
+  echo ""
+  echo "${p} passed: $PASSED / $TOTAL"
+  echo ""
 done
 
 if [[ "${#failed_opts[@]}" -ne 0 ]]; then
@@ -45,5 +52,5 @@ if [[ "${#failed_opts[@]}" -ne 0 ]]; then
   echo "FILECHECK FAILURE" 1>&2
   exit 1
 else
-  echo "== All Tests are PASSED! =="
+  echo "== All FileCheck Tests are PASSED! =="
 fi
