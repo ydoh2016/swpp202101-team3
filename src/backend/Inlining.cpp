@@ -37,13 +37,31 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
 
     BasicBlock *BBEntry; // The inlined entry block
     PHINode *phiInserted = nullptr; // To prevent multiple phi node insertion
-    // Copy the inilined function's BBs into the caller function
-    for (auto &BB : *callee) {
-        ValueToValueMapTy VM;
-        BasicBlock *BBCopied = CloneBasicBlock(&BB, VM, "", caller);
 
-        if (&callee->getEntryBlock() == &BB) {
+    vector<BasicBlock*> BBs; // To prevent insertions during the range-based for 
+    for (auto &BB : *callee) {
+        BBs.push_back(&BB);
+    }
+
+    // Copy the inilined function's BBs into the caller function
+    for (auto BB : BBs) {
+        ValueToValueMapTy VM;
+        BasicBlock *BBCopied = CloneBasicBlock(BB, VM, "", caller);
+
+        if (&callee->getEntryBlock() == BB) {
             BBEntry = BBCopied;
+        }
+
+        for (auto &I : *BB) {
+            Value *to = VM[&I];
+            for (auto it = I.use_begin(), end = I.use_end(); it != end;) {
+                Use &U = *it++;
+                User *Usr = U.getUser();
+                Instruction *UsrI = dyn_cast<Instruction>(Usr);
+                if (UsrI->getParent() == BBCopied) {
+                    U.set(to);
+                }
+            }
         }
 
         int argCount = call->getNumArgOperands();
@@ -61,9 +79,10 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
             }
         }
         
-        // If this block is a return block
         Instruction *terminator = BBCopied->getTerminator();
+        // If this block is a return block
         if (dyn_cast<ReturnInst>(terminator) != nullptr) {
+            // If this doesn't return void
             if (terminator->getNumOperands() != 0) {
                 Value *VReturn = terminator->getOperand(0);
                 if (phiInserted == nullptr) {
@@ -74,8 +93,8 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
                 }
                 phiInserted->addIncoming(VReturn, BBCopied);
             }
-            BranchInst::Create(BBAfter, BBCopied);
             terminator->eraseFromParent();
+            BranchInst::Create(BBAfter, BBCopied);
         }
     }
 
