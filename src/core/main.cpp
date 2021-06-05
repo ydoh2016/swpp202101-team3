@@ -126,21 +126,19 @@ int main(int argc, char *argv[]) {
   if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
-  if (specificPass == "all" || specificPass == "sprint" || specificPass == "inlining")
-    MPM.addPass(InliningPass());
-
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
 
+  if (specificPass == "all" || specificPass == "sprint" || specificPass == "inlining")
+    MPM.addPass(InliningPass());
+
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
-  LivenessAnalysis().run(*M, MAM);
-  SpillCostAnalysis().run(*M, MAM);
   AddressArgCastPass().run(*M, MAM);
   ConstExprRemovePass().run(*M, MAM);
   GEPUnpackPass().run(*M, MAM);

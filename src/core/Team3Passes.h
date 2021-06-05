@@ -59,9 +59,11 @@ public:
 
 class InliningPass : public PassInfoMixin<InliningPass> {
 private:
+  static int MAX_BB_COUNT;
   void getFunctionCalls(Module *M, vector<CallInst*> *calls);
-  void cloneIntoCaller(CallInst *call);
+  void cloneIntoCaller(CallInst *call, DominatorTree &DT);
   void divideBasicBlock(Instruction *criteria);
+  int getBBCount(Function *F);
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };

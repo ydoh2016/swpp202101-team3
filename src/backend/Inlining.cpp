@@ -3,7 +3,6 @@
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/InstIterator.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Function.h"
@@ -16,15 +15,28 @@ using namespace std;
 
 namespace backend {
 
+int InliningPass::MAX_BB_COUNT = 3;
+
+int InliningPass::getBBCount(Function *F) {
+    int count = 0;
+    for (auto &BB : *F) {
+        ++count;
+    }
+    return count;
+}
+
 void InliningPass::getFunctionCalls(Module *M, vector<CallInst*> *calls) {
     for (Function &F : *M) {
         for (inst_iterator IT = inst_begin(&F), E = inst_end(&F); IT != E; ++IT) {
             Instruction *I = &*IT;
             CallInst *CI = dyn_cast<CallInst>(I);
-            if (CI != nullptr && 
-                CI->getCalledFunction()->hasExactDefinition() &&
-                CI->getCalledFunction() != &F) { // No inline for recursions
-                calls->push_back(CI);
+            if (CI != nullptr) {
+                Function *called = CI->getCalledFunction();
+                if (getBBCount(called) < MAX_BB_COUNT && 
+                    called->hasExactDefinition() &&
+                    called != &F) { // No inline for recursions
+                    calls->push_back(CI);
+                }
             }
         }
     }
@@ -36,47 +48,38 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
 
     BasicBlock *BBCaller = call->getParent();
     BasicBlock *BBAfter = SplitBlock(BBCaller, call, &DT);
-
-    BasicBlock *BBEntry; // The inlined entry block
-    PHINode *phiInserted = nullptr; // To prevent multiple phi node insertion
-
-    vector<BasicBlock*> BBs; // To prevent insertions during the range-based for 
-    for (auto &BB : *callee) {
-        BBs.push_back(&BB);
+    int succCount = BBCaller->getTerminator()->getNumSuccessors();
+    for (int i = 0; i < succCount; ++i) {
+        BasicBlock *BBSucc = BBCaller->getTerminator()->getSuccessor(i);
+        BBSucc->replacePhiUsesWith(BBCaller, BBAfter);
     }
 
+    BasicBlock *BBCopiedEntry = nullptr; // The inlined entry block
+    PHINode *phiInserted = nullptr; // To prevent multiple phi node insertion
+    
+    vector<BasicBlock*> BBCallees; // To prevent insertions during the range-based for
+    for (auto &BBCallee : *callee) {
+        BBCallees.push_back(&BBCallee);
+    }
+
+    map<Value*, Value*> instructionMap;
+    map<BasicBlock*, BasicBlock*> BBMap;
     // Copy the inilined function's BBs into the caller function
     // BB: original blocks
-    for (auto BB : BBs) {
+    for (auto BBCallee : BBCallees) {
         ValueToValueMapTy VM;
-        BasicBlock *BBCopied = CloneBasicBlock(BB, VM, "", caller);
+        BasicBlock *BBCopied = CloneBasicBlock(BBCallee, VM, "", caller);
+        BBMap.insert({BBCallee, BBCopied});
 
         // Cache the copied entry block
-        if (BB == &callee->getEntryBlock()) {
-            BBEntry = BBCopied;
+        if (BBCallee == &callee->getEntryBlock()) {
+            BBCopiedEntry = BBCopied;
         }
 
-        // Remap instructions in the copied basic block
-        for (auto &I : *BB) {
+        for (auto &I : *BBCallee) {
+            Value *from = &I;
             Value *to = VM[&I];
-            for (auto it = I.use_begin(), end = I.use_end(); it != end;) {
-                Use &U = *it++;
-                User *Usr = U.getUser();
-                Instruction *UsrI = dyn_cast<Instruction>(Usr);
-                if (UsrI->getParent() == BBCopied) {
-                    U.set(to);
-                }
-            }
-        }
-
-        // Remap basic block uses in the caller to the copied one
-        for (auto it = BB->use_begin(), end = BB->use_end(); it != end;) {
-            Use &U = *it++;
-            User *Usr = U.getUser();
-            Instruction *UsrI = dyn_cast<Instruction>(Usr);
-            if (UsrI->getFunction() == caller) {
-                U.set(BBCopied);
-            }
+            instructionMap.insert({from, to});
         }
 
         int argCount = call->getNumArgOperands();
@@ -114,7 +117,44 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
         }
     }
 
-    BBCaller->getTerminator()->setSuccessor(0, BBEntry);
+    // Remap instructions in the copied basic block
+    for (auto mapping : instructionMap) {
+        Value *from = mapping.first;
+        Value *to = mapping.second;
+        for (auto it = from->use_begin(), end = from->use_end(); it != end;) {
+            Use &U = *it++;
+            User *Usr = U.getUser();
+            Instruction *UsrI = dyn_cast<Instruction>(Usr);
+            if (UsrI->getFunction() == caller) {
+                U.set(to);
+            }
+        }
+    }
+
+    for (auto mapping : BBMap) {
+        BasicBlock *BBFrom = mapping.first;
+        BasicBlock *BBTo = mapping.second;
+        for (auto it = BBFrom->use_begin(), end = BBFrom->use_end(); it != end;) {
+            Use &U = *it++;
+            User *Usr = U.getUser();
+            Instruction *UsrI = dyn_cast<Instruction>(Usr);
+            if (UsrI->getFunction() == caller) {
+                U.set(BBTo);
+            }
+        }
+
+        for (auto &phi : BBTo->phis()) {
+            int count = phi.getNumIncomingValues();
+            for (int i = 0; i < count; ++i) {
+                BasicBlock *BBIncoming = phi.getIncomingBlock(i);
+                if (BBMap.find(BBIncoming) != BBMap.end()) {
+                    phi.setIncomingBlock(i, BBMap[BBIncoming]);
+                }
+            }
+        }
+    }
+
+    BBCaller->getTerminator()->setSuccessor(0, BBCopiedEntry);
 
     if (phiInserted != nullptr) {
         call->replaceAllUsesWith(phiInserted);
@@ -131,7 +171,7 @@ PreservedAnalyses InliningPass::run(Module &M, ModuleAnalysisManager &MAM) {
         DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(*call->getFunction());
         cloneIntoCaller(call, DT);
     }
-
+    
     return PreservedAnalyses::all();
 }
 }
