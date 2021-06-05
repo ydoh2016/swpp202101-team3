@@ -21,7 +21,9 @@ void InliningPass::getFunctionCalls(Module *M, vector<CallInst*> *calls) {
         for (inst_iterator IT = inst_begin(&F), E = inst_end(&F); IT != E; ++IT) {
             Instruction *I = &*IT;
             CallInst *CI = dyn_cast<CallInst>(I);
-            if (CI != nullptr && CI->getCalledFunction()->hasExactDefinition()) {
+            if (CI != nullptr && 
+                CI->getCalledFunction()->hasExactDefinition() &&
+                CI->getCalledFunction() != &F) { // No inline for recursions
                 calls->push_back(CI);
             }
         }
@@ -44,14 +46,17 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
     }
 
     // Copy the inilined function's BBs into the caller function
+    // BB: original blocks
     for (auto BB : BBs) {
         ValueToValueMapTy VM;
         BasicBlock *BBCopied = CloneBasicBlock(BB, VM, "", caller);
 
-        if (&callee->getEntryBlock() == BB) {
+        // Cache the copied entry block
+        if (BB == &callee->getEntryBlock()) {
             BBEntry = BBCopied;
         }
 
+        // Remap instructions in the copied basic block
         for (auto &I : *BB) {
             Value *to = VM[&I];
             for (auto it = I.use_begin(), end = I.use_end(); it != end;) {
@@ -61,6 +66,16 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
                 if (UsrI->getParent() == BBCopied) {
                     U.set(to);
                 }
+            }
+        }
+
+        // Remap basic block uses in the caller to the copied one
+        for (auto it = BB->use_begin(), end = BB->use_end(); it != end;) {
+            Use &U = *it++;
+            User *Usr = U.getUser();
+            Instruction *UsrI = dyn_cast<Instruction>(Usr);
+            if (UsrI->getFunction() == caller) {
+                U.set(BBCopied);
             }
         }
 
@@ -85,9 +100,10 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
             // If this doesn't return void
             if (terminator->getNumOperands() != 0) {
                 Value *VReturn = terminator->getOperand(0);
+                // Create a new phi node
                 if (phiInserted == nullptr) {
-                    phiInserted = PHINode::Create(call->getFunctionType(), 1, "");
-                    // Insert before the first non-phi instruction
+                    phiInserted = PHINode::Create(call->getType(), 1, "");
+                    //Insert before the first non-phi instruction
                     Instruction *insertPoint = BBAfter->getFirstNonPHI();
                     phiInserted->insertBefore(insertPoint);
                 }
@@ -99,12 +115,17 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
     }
 
     BBCaller->getTerminator()->setSuccessor(0, BBEntry);
+
+    if (phiInserted != nullptr) {
+        call->replaceAllUsesWith(phiInserted);
+    }
     call->eraseFromParent();
 }
 
 PreservedAnalyses InliningPass::run(Module &M, ModuleAnalysisManager &MAM) {
     vector<CallInst*> functionCalls;
     getFunctionCalls(&M, &functionCalls);
+
     for (auto call : functionCalls) {
         FunctionAnalysisManager &FAM = MAM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
         DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(*call->getFunction());
