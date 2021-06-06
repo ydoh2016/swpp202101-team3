@@ -125,6 +125,13 @@ class AssemblyEmitter : public InstVisitor<AssemblyEmitter> {
   //Input IR characteristics
   SymbolMap* SM;
   map<Function*, SpInfo> spOffset;
+  
+  struct OptiMemAccInfo {
+    unsigned start;
+    unsigned size;
+  };
+
+  map<Instruction*, OptiMemAccInfo> omaccInfos;
 
   //interface from values to string names of assigned symbols.
   //references SM to find the assignee.
@@ -141,7 +148,8 @@ class AssemblyEmitter : public InstVisitor<AssemblyEmitter> {
   map<Instruction*, Instruction*>& optiMemAccMap;
   int countOfLoad = 0;
   int countOfStore = 0;
-  unsigned remainRegister = 0;
+  int reservoirForTemp = 0;
+  int remainRegister = 0;
 public:
   AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes, map<Instruction*, Instruction*>& refOptiMemAccMap);
 
@@ -167,7 +175,10 @@ public:
   void visitSwitchInst(SwitchInst&);
   void visitBinaryOperator(BinaryOperator&);
 
-  void setRemainRegister(unsigned n) { remainRegister = n;}
+  void setRemainRegister(unsigned n) { 
+    reservoirForTemp = USER_REGISTER_NUM - n + 1;
+    remainRegister = n - 1;
+  }
 };
 
 //---------------------------------------------------------------

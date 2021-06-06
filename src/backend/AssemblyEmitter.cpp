@@ -106,6 +106,7 @@ void AssemblyEmitter::visitFunction(Function& F) {
     //finishing code will be printed outside the AssemblyEmitter.
     countOfLoad = 0;
     countOfStore = 0;
+    omaccInfos.clear();
     *fout << "start " << name(&F) << " " << F.arg_size() << ":\n";
 }
 void AssemblyEmitter::visitBasicBlock(BasicBlock& BB) {
@@ -194,42 +195,46 @@ void AssemblyEmitter::visitLoadInst(LoadInst& I) {
             auto allocInst = dyn_cast<AllocaInst>(it->second);
             Symbol* symbol = SM->get(allocInst);
             if(Memory* mem = symbol->castToMemory()) {
+                auto it = omaccInfos.find(allocInst);
+                unsigned start = 0;
+                unsigned cnt = 0;
                 auto elemSize = (getAccessSize(allocInst->getAllocatedType()->getArrayElementType()));
-                auto elemCount = allocInst->getAllocatedType()->getArrayNumElements();
-                bool coverAll = (remainRegister-1) >= elemCount;
+
+                if(it == omaccInfos.end()) {
+                    if(remainRegister < 1) {
+                        *fout << emitInst({name(&I), "= load", size, reg->getName(), "0"});
+                        return;
+                    }
+                    else {
+                        auto elemCount = allocInst->getAllocatedType()->getArrayNumElements();
+                        elemCount = remainRegister >= elemCount ? elemCount : remainRegister;
+                        start = USER_REGISTER_NUM - remainRegister + 1;
+                        cnt = elemCount;
+                        omaccInfos[allocInst] = {start, cnt};
+                        remainRegister -= cnt;
+                    }
+                }
+                else {
+                    auto& data = it->second;
+                    start = data.start;
+                    cnt = data.size;
+                }
                 *fout << "  " << tmpReg << "= sub " << reg->getName() << " " << mem->getBase()->getName() << " 64\n";
                 *fout << "  " << tmpReg << "= udiv " << tmpReg << " " << elemSize << " 64\n";
                 *fout << "  " << "switch " << tmpReg;
-                if(coverAll) {
-                    for(auto i = 0; i < elemCount; ++i) {
-                        *fout << " " << i << " .load" << countOfLoad << "." << i;
-                    }
-                    *fout << " .normalLoad" << countOfLoad << "\n";
-                    for(auto i = 0; i < elemCount; ++i) {
-                        *fout << ".load" << countOfLoad << "." << i << ":\n";
-                        *fout << "  " << name(&I) << " = mul 1 " << "r" << (USER_REGISTER_NUM - remainRegister) + 2 + i << " 64\n";
-                        *fout << "  " << "br .after.load" << countOfLoad << "\n"; 
-                    }
-                    *fout << ".normalLoad" << countOfLoad << ":\n";
-                    *fout<<"  " << name(&I) << " = load " << size << " " << reg->getName() << " 0\n";
-                    *fout<<"  " << "br .after.load" << countOfLoad << "\n"; 
-                    *fout<<".after.load" << countOfLoad << ":\n"; 
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << " " << i << " .load" << countOfLoad << "." << i;
                 }
-                else {
-                    for(auto i = 0; i < remainRegister-1; ++i) {
-                        *fout << " " << i << " .load" << countOfLoad << "." << i;
-                    }
-                    *fout << " .normalLoad" << countOfLoad << "\n";
-                    for(auto i = 0; i < remainRegister-1; ++i) {
-                        *fout<<"  " << ".load" << countOfLoad << "." << i << ":\n";
-                        *fout<<"  " << name(&I) << " = mul 1 " << "r" << (USER_REGISTER_NUM - remainRegister) + 2 + i << " 64\n";
-                        *fout<<"  " << "br .after.load" << countOfLoad << "\n"; 
-                    }
-                    *fout << ".normalLoad" << countOfLoad << ":\n";
-                    *fout<<"  " << name(&I) << " = load " << size << " " << reg->getName() << " 0\n";
-                    *fout<<"  " << "br .after.load" << countOfLoad << "\n"; 
-                    *fout<<".after.load" << countOfLoad << ":\n"; 
+                *fout << " .normalLoad" << countOfLoad << "\n";
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << ".load" << countOfLoad << "." << i << ":\n";
+                    *fout << "  " << name(&I) << " = mul 1 " << "r" << start + i << " 64\n";
+                    *fout << "  " << "br .after.load" << countOfLoad << "\n"; 
                 }
+                *fout << ".normalLoad" << countOfLoad << ":\n";
+                *fout<<"  " << name(&I) << " = load " << size << " " << reg->getName() << " 0\n";
+                *fout<<"  " << "br .after.load" << countOfLoad << "\n"; 
+                *fout<<".after.load" << countOfLoad << ":\n"; 
                 countOfLoad += 1;
             }
             else {
@@ -266,46 +271,50 @@ void AssemblyEmitter::visitStoreInst(StoreInst& I) {
     //else a pointer stored in register,
     else if(Register* reg = symbol->castToRegister()) {
         if(opti) {
-            string tmpReg = "r" + to_string((USER_REGISTER_NUM - remainRegister) + 1);
+            string tmpReg = "r" + to_string(reservoirForTemp);
             auto allocInst = dyn_cast<AllocaInst>(it->second);
             Symbol* symbol = SM->get(allocInst);
             if(Memory* mem = symbol->castToMemory()) {
+                auto it = omaccInfos.find(allocInst);
+                unsigned start = 0;
+                unsigned cnt = 0;
                 auto elemSize = (getAccessSize(allocInst->getAllocatedType()->getArrayElementType()));
-                auto elemCount = allocInst->getAllocatedType()->getArrayNumElements();
-                bool coverAll = (remainRegister-1) >= elemCount;
+                if(it == omaccInfos.end()) {
+                    if(remainRegister < 1) {
+                        *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
+                        return;
+                    }
+                    else {
+                        auto elemCount = allocInst->getAllocatedType()->getArrayNumElements();
+                        elemCount = remainRegister >= elemCount ? elemCount : remainRegister;
+                        start = USER_REGISTER_NUM - remainRegister + 1;
+                        cnt = elemCount;
+                        omaccInfos[allocInst] = {start, cnt};
+                        remainRegister -= cnt;
+                    }
+                }
+                else {
+                    auto& data = it->second;
+                    start = data.start;
+                    cnt = data.size;
+                }
+                
                 *fout << "  " << tmpReg << "= sub " << reg->getName() << " " << mem->getBase()->getName() << " 64\n";
                 *fout << "  " << tmpReg << "= udiv " << tmpReg << " " << elemSize << " 64\n";
                 *fout << "  " << "switch " << tmpReg;
-                if(coverAll) {
-                    for(auto i = 0; i < elemCount; ++i) {
-                        *fout << " " << i << " .store" << countOfStore << "." << i;
-                    }
-                    *fout << " .normalStore" << countOfStore << "\n";
-                    for(auto i = 0; i < elemCount; ++i) {
-                        *fout << ".store" << countOfStore << "." << i << ":\n";
-                        *fout << "  " << "r" << (USER_REGISTER_NUM - remainRegister) + 2 + i << " = mul 1 " << name(val) << " 64\n";
-                        *fout << "  " << "br .after.store" << countOfStore << "\n"; 
-                    }
-                    *fout << ".normalStore" << countOfStore << ":\n";
-                    *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
-                    *fout<<"  " << "br .after.store" << countOfStore << "\n"; 
-                    *fout<<".after.store" << countOfStore << ":\n"; 
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << " " << i << " .store" << countOfStore << "." << i;
                 }
-                else {
-                    for(auto i = 0; i < remainRegister-1; ++i) {
-                        *fout << " " << i << " .store" << countOfStore << "." << i;
-                    }
-                    *fout << " .normalStore" << countOfStore << "\n";
-                    for(auto i = 0; i < remainRegister-1; ++i) {
-                        *fout<< ".store" << countOfStore << "." << i << ":\n";
-                        *fout << "  " << "r" << (USER_REGISTER_NUM - remainRegister) + 2 + i << " = mul 1 " << name(val) << " 64\n";
-                        *fout<<"  " << "br .after.store" << countOfStore << "\n"; 
-                    }
-                    *fout << ".normalStore" << countOfStore << ":\n";
-                    *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
-                    *fout<<"  " << "br .after.store" << countOfStore << "\n"; 
-                    *fout<<".after.store" << countOfStore << ":\n"; 
+                *fout << " .normalStore" << countOfStore << "\n";
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << ".store" << countOfStore << "." << i << ":\n";
+                    *fout << "  " << "r" << start + i << " = mul 1 " << name(val) << " 64\n";
+                    *fout << "  " << "br .after.store" << countOfStore << "\n"; 
                 }
+                *fout << ".normalStore" << countOfStore << ":\n";
+                *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
+                *fout<<"  " << "br .after.store" << countOfStore << "\n"; 
+                *fout<<".after.store" << countOfStore << ":\n"; 
                 countOfStore += 1;
             }
             else {
