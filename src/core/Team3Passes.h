@@ -56,6 +56,14 @@ private:
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
+
+class LoopUnrollingPass : public PassInfoMixin<LoopUnrollingPass> {
+private:
+  
+public:
+  PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
+}
+
 }
 
 #endif
