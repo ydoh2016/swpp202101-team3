@@ -1,40 +1,29 @@
-declare i8* @malloc(i64)
-declare void @free(i8*)
+define i32 @multiple_returns(i32 %arg) {
+  %cond = icmp eq i32 %arg, 0
+  br i1 %cond, label %end1,  label %end2
 
-define dso_local void @swap(i32* %a, i32* %b) {
-entry:
-  %0 = load i32, i32* %a, align 4
-  %1 = load i32, i32* %b, align 4
-  store i32 %1, i32* %a, align 4
-  store i32 %0, i32* %b, align 4
-  ret void
+end1:
+  ret i32 0
+
+end2:
+  ret i32 2
 }
 
-
-define i32 @main() {
-;CHECK-LABEL: start main 0
-entry:
-    %ptr.0 = call i8* @malloc(i64 32)
-    %ptr.1 = bitcast i8* %ptr.0 to i32*
-
-    %ptr.2 = call i8* @malloc(i64 32)
-    %ptr.3 = bitcast i8* %ptr.2 to i32*
-
-    store i32 3, i32* %ptr.1
-    store i32 5, i32* %ptr.3
-;CHECK-NOT: call swap [[RLEFT:r[0-9]+]] [[RRIGHT:r[0-9]+]]
-;CHECK: br .entry1
-;CHECK-LABEL: .entry.split:
-;CHECK-LABEL: .entry1:
-;CHECK: br .entry.split
-    call void @swap(i32* %ptr.1, i32* %ptr.3)
-    %div.0 = load i32, i32* %ptr.1
-    %div.1 = load i32, i32* %ptr.3
-
-    %result = urem i32 %div.0, %div.1
-
-    call void @free(i8* %ptr.0)
-    call void @free(i8* %ptr.2)
-    
-    ret i32 %result
+define void @main() {
+;CHECK_LABEL: ._defaultBB0:
+;CHECK: br ._defaultBB1 
+;CHECK-LABEL: ..split:
+;CHECK: ret 0 
+;CHECK-LABEL: ._defaultBB1:
+;CHECK: [[R1:r[0-9]+]] = icmp eq 5 0 32 
+;CHECK-NEXT: br [[R1:r[0-9]+]] .end1 .end2 
+;CHECK-LABEL: .end1:
+;CHECK: [[R2:r[0-9]+]] = mul 0 1 32 
+;CHECK-NEXT: br ..split 
+;CHECK-LABEL: .end2:
+;CHECK: [[R3:r[0-9]+]] = mul 2 1 32 
+;CHECK-NEXT: br ..split 
+;
+  %result = call i32 @multiple_returns(i32 5)
+  ret void
 }
