@@ -103,6 +103,11 @@ int main(int argc, char *argv[]) {
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
+
+  map<Instruction*, Instruction*> optiMemAccMap;
+
+  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "omacc")  
+    FPM.addPass(OptiMemAccess(optiMemAccMap));
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
@@ -152,7 +157,7 @@ int main(int argc, char *argv[]) {
   }
 
   // execute backend to emit assembly
-  Backend B(optOutput, malloc_like_func, optPrintProgress);
+  Backend B(optOutput, malloc_like_func, optiMemAccMap, optPrintProgress);
   B.run(*M, MAM);
   
   return 0;

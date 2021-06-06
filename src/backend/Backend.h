@@ -13,6 +13,7 @@
 #include <string>
 #include <queue>
 #include <set>
+#include <map>
 
 using namespace llvm;
 using namespace std;
@@ -137,9 +138,12 @@ class AssemblyEmitter : public InstVisitor<AssemblyEmitter> {
   //updates the bandwidth and returns the value.
   string stringBandWidth(Value*);
   set<string> mallocLikeFunc;
-
+  map<Instruction*, Instruction*>& optiMemAccMap;
+  int countOfLoad = 0;
+  int countOfStore = 0;
+  unsigned remainRegister = 0;
 public:
-  AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes);
+  AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes, map<Instruction*, Instruction*>& refOptiMemAccMap);
 
   //Visit functions; should statically override.
   void visitFunction(Function&);
@@ -162,6 +166,8 @@ public:
   void visitBranchInst(BranchInst&);
   void visitSwitchInst(SwitchInst&);
   void visitBinaryOperator(BinaryOperator&);
+
+  void setRemainRegister(unsigned n) { remainRegister = n;}
 };
 
 //---------------------------------------------------------------
@@ -196,11 +202,12 @@ class Backend : public PassInfoMixin<Backend> {
   //Contains information about register files and 
   TargetMachine TM; 
   set<string> mallocLikeFunc;
+  map<Instruction*, Instruction*>& optiMemAccMap;
 
 public:
 
-  Backend(string outputFile, set<string>& mallocLikes, bool printProcess = false) :
-      outputFile(outputFile), printProcess(printProcess), TM(), mallocLikeFunc(mallocLikes) {}
+  Backend(string outputFile, set<string>& mallocLikes, map<Instruction*, Instruction*>& inOptiMemAccMap, bool printProcess = false) :
+      outputFile(outputFile), printProcess(printProcess), TM(), mallocLikeFunc(mallocLikes), optiMemAccMap(inOptiMemAccMap) {}
   
   //runs the backend, which emits the assembly to given .s file.
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &MAM);
