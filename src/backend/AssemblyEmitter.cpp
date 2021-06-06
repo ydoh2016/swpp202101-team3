@@ -216,11 +216,11 @@ void AssemblyEmitter::visitLoadInst(LoadInst& I) {
                     *fout<<".after.load" << countOfLoad << ":\n"; 
                 }
                 else {
-                    for(auto i = 0; i < remainRegister; ++i) {
+                    for(auto i = 0; i < remainRegister-1; ++i) {
                         *fout << " " << i << " .load" << countOfLoad << "." << i;
                     }
                     *fout << " .normalLoad" << countOfLoad << "\n";
-                    for(auto i = 0; i < remainRegister; ++i) {
+                    for(auto i = 0; i < remainRegister-1; ++i) {
                         *fout<<"  " << ".load" << countOfLoad << "." << i << ":\n";
                         *fout<<"  " << name(&I) << " = mul 1 " << "r" << (USER_REGISTER_NUM - remainRegister) + 2 + i << " 64\n";
                         *fout<<"  " << "br .after.load" << countOfLoad << "\n"; 
@@ -292,11 +292,11 @@ void AssemblyEmitter::visitStoreInst(StoreInst& I) {
                     *fout<<".after.store" << countOfStore << ":\n"; 
                 }
                 else {
-                    for(auto i = 0; i < remainRegister; ++i) {
+                    for(auto i = 0; i < remainRegister-1; ++i) {
                         *fout << " " << i << " .store" << countOfStore << "." << i;
                     }
                     *fout << " .normalStore" << countOfStore << "\n";
-                    for(auto i = 0; i < remainRegister; ++i) {
+                    for(auto i = 0; i < remainRegister-1; ++i) {
                         *fout<< ".store" << countOfStore << "." << i << ":\n";
                         *fout << "  " << "r" << (USER_REGISTER_NUM - remainRegister) + 2 + i << " = mul 1 " << name(val) << " 64\n";
                         *fout<<"  " << "br .after.store" << countOfStore << "\n"; 
