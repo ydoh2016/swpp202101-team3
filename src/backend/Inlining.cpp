@@ -155,6 +155,7 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
     }
 
     BBCaller->getTerminator()->setSuccessor(0, BBCopiedEntry);
+    //MergeBlockIntoPredecessor(BBCopiedEntry);
 
     if (phiInserted != nullptr) {
         call->replaceAllUsesWith(phiInserted);
@@ -172,7 +173,7 @@ PreservedAnalyses InliningPass::run(Module &M, ModuleAnalysisManager &MAM) {
         cloneIntoCaller(call, DT);
     }
     
-    return PreservedAnalyses::all();
+    return PreservedAnalyses::none();
 }
 }
 

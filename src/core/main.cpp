@@ -128,14 +128,14 @@ int main(int argc, char *argv[]) {
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
-
-  if (specificPass == "all" || specificPass == "sprint" || specificPass == "inlining")
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
     MPM.addPass(InliningPass());
-
+  
   MPM.run(*M, MAM);
+
   //////////////////////////////////////////////////// BY HERE
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
