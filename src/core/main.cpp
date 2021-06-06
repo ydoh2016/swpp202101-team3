@@ -124,10 +124,6 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack(malloc_like_func));
 
-  set<string> malloc_like_func;
-  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
-    FPM3.addPass(Heap2Stack(malloc_like_func));
-
   if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
