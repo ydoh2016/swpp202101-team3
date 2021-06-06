@@ -15,7 +15,7 @@ using namespace std;
 
 namespace backend {
 
-int InliningPass::MAX_BB_COUNT = 3;
+int InliningPass::MAX_BB_COUNT = 5;
 
 int InliningPass::getBBCount(Function *F) {
     int count = 0;
@@ -32,7 +32,7 @@ void InliningPass::getFunctionCalls(Module *M, vector<CallInst*> *calls) {
             CallInst *CI = dyn_cast<CallInst>(I);
             if (CI != nullptr) {
                 Function *called = CI->getCalledFunction();
-                if (getBBCount(called) < MAX_BB_COUNT && 
+                if (getBBCount(called) <= MAX_BB_COUNT && 
                     called->hasExactDefinition() &&
                     called != &F) { // No inline for recursions
                     calls->push_back(CI);
