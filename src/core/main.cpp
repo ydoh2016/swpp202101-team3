@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     MPM.addPass(AbbrMemPass());
 
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopunrolling"){
-    FPM5.addPass(LoopUnrollingPass());
+    FPM5.addPass(LoopReverseTerminatorPass());
   }
 
   // from FPM to MPM

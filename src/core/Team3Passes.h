@@ -57,9 +57,11 @@ public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
 
-class LoopUnrollingPass : public PassInfoMixin<LoopUnrollingPass> {
+class LoopReverseTerminatorPass : public PassInfoMixin<LoopReverseTerminatorPass> {
 private:
-
+  bool isLoopCondBlock(string bbname);
+  bool tryReverseTerminator(BasicBlock *ExitingBlock);
+  CmpInst::Predicate getReversePredicate(CmpInst::Predicate pred);
 public:
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
 };
