@@ -21,6 +21,9 @@
 #include "llvm/Transforms/Scalar/TailRecursionElimination.h"
 // add header for gvn
 #include "llvm/Transforms/Scalar/GVN.h"
+// add header for indvars
+#include "llvm/Transforms/Scalar/LoopUnrollAndJamPass.h"
+#include "llvm/Transforms/Scalar/LoopUnrollPass.h"
 
 #include <string>
 
@@ -107,6 +110,9 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   FunctionPassManager FPM3;
+  FunctionPassManager FPM5;
+
+  LoopPassManager LPM;
 
   //add custom passes
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
@@ -127,14 +133,16 @@ int main(int argc, char *argv[]) {
   if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
-  if (specificPass == "all" || specificPass == "sprint3" || specificPass = "loopunrolling")
-    MPM.addPass(LoopUnrollingPass());
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopunrolling"){
+    FPM5.addPass(LoopUnrollingPass());
+  }
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
 
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
@@ -151,6 +159,7 @@ int main(int argc, char *argv[]) {
     std::error_code ec;
     raw_fd_ostream output(outputDbg, ec);
     output << *M;
+    outs() << *M;
     output.close();
   }
 

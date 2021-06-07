@@ -59,10 +59,10 @@ public:
 
 class LoopUnrollingPass : public PassInfoMixin<LoopUnrollingPass> {
 private:
-  
+
 public:
-  PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
-}
+  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+};
 
 }
 
