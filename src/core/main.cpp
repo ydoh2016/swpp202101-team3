@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
   if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
-  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopunrolling"){
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopreverseterminator"){
     FPM5.addPass(LoopReverseTerminatorPass());
   }
 
