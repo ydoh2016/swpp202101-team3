@@ -3,8 +3,8 @@ name: C/C++ CI
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master, ydoh2016:master ]
+  pull_request_target:
+    branches: [ master ]
 
 jobs:
   build:
@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+          ref: ${{ github.event.pull_request.head.sha }}
     - name: configure
       run: ./configure.sh /llvmscript/llvm-12.0-releaseassert/bin
     - name: make
