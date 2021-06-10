@@ -112,9 +112,6 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   FunctionPassManager FPM3;
-  
-
-  LoopPassManager LPM;
 
   //add custom passes
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
