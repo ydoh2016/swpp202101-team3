@@ -16,7 +16,7 @@ jobs:
       with:
           ref: ${{ github.event.pull_request.head.sha }}
     - name: install requirements
-      run: apt install jq
+      run: sudo apt-get -y install jq
     - name: configure
       run: ./configure.sh /llvmscript/llvm-12.0-releaseassert/bin
     - name: make
