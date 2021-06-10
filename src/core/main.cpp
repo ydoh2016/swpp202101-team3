@@ -99,6 +99,8 @@ int main(int argc, char *argv[]) {
   PB.registerLoopAnalyses(LAM);
   PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
 
+  FunctionPassManager FPM5;
+
   // add existing passes
   //add Dead code Elimination
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "adce")  
@@ -110,7 +112,7 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   FunctionPassManager FPM3;
-  FunctionPassManager FPM5;
+  
 
   LoopPassManager LPM;
 
@@ -138,12 +140,12 @@ int main(int argc, char *argv[]) {
   }
 
   // from FPM to MPM
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
-
+  
   MPM.run(*M, MAM);
   //////////////////////////////////////////////////// BY HERE
   SplitSelfLoopPass().run(*M, MAM);
