@@ -11,12 +11,15 @@ OBJ_BACKEND=$(SRC_BACKEND:src/backend/%.cpp=obj/backend/%.o)
 
 _dummy := $(shell mkdir -p obj obj/core obj/backend bin)
 
-all: bin/sf-compiler bin/sf-compiler-tests
+all: bin/sf-interpreter bin/sf-compiler bin/sf-compiler-tests
 
 test: all
 	@bin/sf-compiler-tests
 	@./run-filechecks.sh $(FILECHECK_PATH)
 	@./run-costchecks.sh
+
+bin/sf-interpreter:
+	@./swpp202101-interpreter/build.sh
 
 bin/sf-compiler: $(OBJ_CORE) $(OBJ_BACKEND)
 	@$(CXX) $(ISYSROOT) $(LDFLAGS) -o bin/sf-compiler $(OBJ_CORE) $(OBJ_BACKEND)
@@ -37,4 +40,4 @@ obj/gtest_all.o: $(GTESTSRC)
 	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf obj bin/sf-compiler bin/sf-compiler-tests
+	rm -rf obj bin
