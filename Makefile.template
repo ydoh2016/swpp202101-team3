@@ -19,6 +19,7 @@ test: all
 	@./run-costchecks.sh
 
 bin/sf-interpreter:
+	@chmod a+x ./swpp202101-interpreter/build.sh
 	@./swpp202101-interpreter/build.sh
 
 bin/sf-compiler: $(OBJ_CORE) $(OBJ_BACKEND)
