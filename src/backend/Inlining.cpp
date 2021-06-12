@@ -15,7 +15,7 @@ using namespace std;
 
 namespace backend {
 
-int InliningPass::MAX_BB_COUNT = 5;
+int InliningPass::MAX_BB_COUNT = 10;
 
 int InliningPass::getBBCount(Function *F) {
     int count = 0;
@@ -155,7 +155,6 @@ void InliningPass::cloneIntoCaller(CallInst *call, DominatorTree &DT) {
     }
 
     BBCaller->getTerminator()->setSuccessor(0, BBCopiedEntry);
-    //MergeBlockIntoPredecessor(BBCopiedEntry);
 
     if (phiInserted != nullptr) {
         call->replaceAllUsesWith(phiInserted);
