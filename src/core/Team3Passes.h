@@ -59,7 +59,6 @@ public:
 
 class LoopReverseTerminatorPass : public PassInfoMixin<LoopReverseTerminatorPass> {
 private:
-  bool isLoopCondBlock(string bbname);
   bool tryReverseTerminator(BasicBlock *ExitingBlock);
   CmpInst::Predicate getReversePredicate(CmpInst::Predicate pred);
 public:

@@ -12,24 +12,11 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include <cassert>
-#include <string>
 
 using namespace llvm;
 using namespace std;
 
 namespace backend {
-
-// Benchmark Loop Detector
-bool LoopReverseTerminatorPass::isLoopCondBlock(string bbname){
-    if(bbname.find("for.cond") != string::npos) 
-        return true;
-    
-    if(bbname.find("while.cond") != string::npos) 
-        return true;
-    
-    return false;
-}
-
 // Change Predicate that make Reverse Result
 // ex. EQ -> NE, GE -> LT ...
 CmpInst::Predicate LoopReverseTerminatorPass::getReversePredicate(CmpInst::Predicate pred) {
@@ -65,17 +52,32 @@ bool LoopReverseTerminatorPass::tryReverseTerminator(BasicBlock *ExitingBlock) {
     {
         if(!(TermIns->isConditional()))
             return false;
-        IRBuilder<> builder(TermIns);
         auto *CondVal = dyn_cast<CmpInst>(TermIns->getCondition());
-        //Reverse Predicate
-        CondVal->setPredicate(getReversePredicate(CondVal->getPredicate()));
-        //Reverse True/False
         auto *lhs = TermIns->getSuccessor(0);
         auto *rhs = TermIns->getSuccessor(1);
-        auto *NewInst = BranchInst::Create(rhs, lhs, CondVal);
-        ReplaceInstWithInst(TermIns, NewInst);
+        // If Condition doesn't decided in comparator instruction Or
+        // Condition is used in another BB
+        // We dont reverse predicate, we make new value that is reversed original one.
+        if(!CondVal || CondVal->getNumUses() > 1)
+        {
+            auto *CondVal2 = TermIns->getCondition();
+            // Make new neg Val for Terminator
+            auto *NewCondVal = BinaryOperator::CreateNot(CondVal2, "", TermIns);
+            // Reverse True/False
+            auto *NewInst = BranchInst::Create(rhs, lhs, NewCondVal);
+            ReplaceInstWithInst(TermIns, NewInst);
+        }
+        else
+        {
+            // Reverse Predicate
+            CondVal->setPredicate(getReversePredicate(CondVal->getPredicate()));
+            // Reverse True/False
+            auto *NewInst = BranchInst::Create(rhs, lhs, CondVal);
+            ReplaceInstWithInst(TermIns, NewInst);
+        }
         return true;
     }
+
     //Handle case for binary_tree
     else
     {
@@ -102,27 +104,21 @@ bool LoopReverseTerminatorPass::tryReverseTerminator(BasicBlock *ExitingBlock) {
     
 PreservedAnalyses LoopReverseTerminatorPass::run(Function &F, FunctionAnalysisManager &FAM) {
     auto &LI = FAM.getResult<LoopAnalysis>(F);
+    set<BasicBlock*> BBcheck;
 
     bool changed = false;
 
-    //In Benchmark Program
-    for(auto &ExitingBlock : F) 
-    {
-        if(!isLoopCondBlock(ExitingBlock.getName().str()))
-            continue;
-
-        changed = tryReverseTerminator(&ExitingBlock);
-    }
-
-    //For Other LLVM Program
+    //Iterate all Loop
     for(auto &L : LI)
     {
         BasicBlock *ExitingBlock = L->getLoopLatch();
         if(!ExitingBlock || !L->isLoopExiting(ExitingBlock))
-            L->getExitingBlock();
+            ExitingBlock = L->getExitingBlock();
 
         if(ExitingBlock)
-            changed = tryReverseTerminator(ExitingBlock);
+        {
+            changed |= tryReverseTerminator(ExitingBlock);
+        }
     }
 
     if(!changed)
