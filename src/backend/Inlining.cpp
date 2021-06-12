@@ -15,7 +15,7 @@ using namespace std;
 
 namespace backend {
 
-int InliningPass::MAX_BB_COUNT = 5;
+int InliningPass::MAX_BB_COUNT = 10;
 
 int InliningPass::getBBCount(Function *F) {
     int count = 0;
