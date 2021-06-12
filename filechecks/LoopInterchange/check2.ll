@@ -13,7 +13,7 @@ define i32 @main() {
   %7 = load i32, i32* %3
   %8 = icmp slt i32 %7, 4
   br i1 %8, label %9, label %27
-9:
+for.body:
   store i32 0, i32* %4
   br label %10
 10:

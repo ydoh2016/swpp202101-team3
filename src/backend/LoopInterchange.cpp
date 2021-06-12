@@ -1,6 +1,7 @@
 #include "../core/Team3Passes.h"
 
 #include "llvm/IR/CFG.h"
+#include "llvm/Pass.h"
 
 #include <vector>
 
@@ -14,25 +15,70 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
   vector<BasicBlock*> headers;
   vector<BasicBlock*> exiters;
   vector<Loop*> outers;
-  vector<Loop*> inners;
+  vector<vector<Loop*>> inners;
   int count = 0;
   bool invariant = true;
   /*
-   * find interchange-able loop
+   * find loops
    */
   for(auto& outer : LA.getTopLevelLoopsVector()) {
-    Loop* inner;
-    if(outer->getSubLoopsVector().size() == 1) {
-      inner = outer->getSubLoopsVector().at(0);
-      outers.push_back(outer);
-      inners.push_back(inner);
-      for(BasicBlock* BB : outer->getBlocksVector()) {
-        for(auto& I : *BB) {
-          // is it ok to interchange loop?
-          // if not, invariant <- false
+    outers.push_back(outer);
+    for(int i = 0; i < outer->getSubLoopsVector().size(); ++i) {
+      if(i == 0) {
+        vector<Loop*> tmp;
+        inners.push_back(tmp);
+      }
+      Loop* inner;
+      inner = outer->getSubLoopsVector().at(i);
+      inners.back().push_back(inner);
+    }
+    outs() << "Loop " << outers.size() << " inners : " << inners.at(outers.size() - 1).size() << "\n";
+  }
+  /*
+   * find interchange-able loops
+   * conditions should be founded / deleted
+   */
+  vector<bool> interchange;
+  interchange.resize(outers.size());
+  for(int i = 0; i < outers.size(); ++i) {
+    Loop* outer = outers.at(i);
+    // 1. is loop is doubley nested?
+    bool case1;
+    if(outer->getSubLoopsVector().size() == 1 && outer->getSubLoopsVector().at(0)->getSubLoopsVector().empty()) {
+      outs() << "case 1\n";
+      case1 = true;
+    }
+    else {
+      case1 = false;
+    }
+    //interchange.at(i) = interchange.at(i) & case1;
+    interchange.at(i) = case1;
+    // 2. is there no instruction other than inner loop
+    //    idea by @ObjectOrientedLife Thank you :)
+    bool case2;
+    BasicBlock* BBHeader = outer->getHeader();
+    Instruction* terminator = dyn_cast<Instruction>(BBHeader->getTerminator());
+    int successorCount = terminator->getNumSuccessors();
+    int instCount = 0;
+    for(int j = 0; j < successorCount; ++j) {
+      BasicBlock* successor = terminator->getSuccessor(j);
+      outs() << "successor : " << successor->getName().str() << "\n"; // todo: successor's name seems to be null infilecheck
+      if(successor->getName().str().find("for.body") != string::npos) {
+        for(auto& I : *successor) {
+          instCount++;
+          outs() << instCount;
         }
       }
     }
+    if(instCount == 0) {
+      case2 = true;
+    } else {
+      case2 = false;
+    }
+    interchange.at(i) = interchange.at(i) & case2;
+  }
+  for(int j = 0; j < interchange.size(); ++j) {
+    outs() << interchange.at(j) << "\n";
   }
   /*
    * get loop information
