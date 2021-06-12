@@ -124,7 +124,6 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
-
   set<string> malloc_like_func;
   if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack(malloc_like_func));
@@ -134,11 +133,14 @@ int main(int argc, char *argv[]) {
 
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
-
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
+    MPM.addPass(InliningPass());
+  
   MPM.run(*M, MAM);
+
   //////////////////////////////////////////////////// BY HERE
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
