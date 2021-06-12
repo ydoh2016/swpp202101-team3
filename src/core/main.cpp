@@ -143,11 +143,12 @@ int main(int argc, char *argv[]) {
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
-    MPM.addPass(InliningPass()); 
+    MPM.addPass(InliningPass());
   
   MPM.run(*M, MAM);
 
