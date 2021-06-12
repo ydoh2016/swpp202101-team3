@@ -78,7 +78,7 @@ bool LoopReverseTerminatorPass::tryReverseTerminator(BasicBlock *ExitingBlock) {
         return true;
     }
 
-    //Handle case for binary_tree
+    //Handle case for switch instruction
     else
     {
         auto *TermIns2 = dyn_cast<SwitchInst>(ExitingBlock->getTerminator());
