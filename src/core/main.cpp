@@ -117,6 +117,7 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
   FunctionPassManager FPM3;
+  FunctionPassManager FPM4;
 
   //add custom passes
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
@@ -136,6 +137,8 @@ int main(int argc, char *argv[]) {
   if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopinterchange")
+    FPM4.addPass(LoopInterchange());
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopreverseterminator"){
     FPM5.addPass(LoopReverseTerminatorPass());
   }
@@ -145,6 +148,7 @@ int main(int argc, char *argv[]) {
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM4)));
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
     MPM.addPass(InliningPass());
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
