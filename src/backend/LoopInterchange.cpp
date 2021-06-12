@@ -62,7 +62,7 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
     int instCount = 0;
     for(int j = 0; j < successorCount; ++j) {
       BasicBlock* successor = terminator->getSuccessor(j);
-      outs() << "successor : " << successor->getName().str() << "\n"; // todo: successor's name seems to be null infilecheck
+      outs() << "successor : " << successor->getName().str() << "\n"; // todo: successor's name seems to be null in filecheck -> deal with the case.
       if(successor->getName().str().find("for.body") != string::npos) {
         for(auto& I : *successor) {
           instCount++;
@@ -109,13 +109,17 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
    * ->
    * ... -> inner loop hdr -> outer loop hdr -> ... -> outer loop exit -> inner loop exit -> ...
    */
-  if(invariant) {
-    for(auto& H : headers) {
-      for(auto& BR : *H) {
-        // modify br inst
-      }
-    }
+  for(int i = 0; i < outers.size(); ++i) {
+    Loop* outer = outers.at(i);
+    if(!interchange.at(i)) continue;
+    auto *HdrTerm = dyn_cast<BranchInst>(outer->getHeader()->getTerminator());
+    if(!HdrTerm) continue;
+    outs() << "Let's interchange~!\n";
+    /*
+     * Interchange
+     */
   }
+
   return PreservedAnalyses::all();
 }
 }
