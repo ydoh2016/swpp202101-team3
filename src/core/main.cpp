@@ -108,6 +108,11 @@ int main(int argc, char *argv[]) {
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
+
+  map<Instruction*, Instruction*> optiMemAccMap;
+
+  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "omacc")  
+    FPM.addPass(OptiMemAccess(optiMemAccMap));
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
@@ -124,7 +129,6 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "constantfolding")  
     FPM2.addPass(ConstantFolding());
 
-
   set<string> malloc_like_func;
   if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack(malloc_like_func));
@@ -139,11 +143,15 @@ int main(int argc, char *argv[]) {
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
+
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
+    MPM.addPass(InliningPass());
   
   MPM.run(*M, MAM);
+
   //////////////////////////////////////////////////// BY HERE
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
@@ -163,7 +171,7 @@ int main(int argc, char *argv[]) {
   }
 
   // execute backend to emit assembly
-  Backend B(optOutput, malloc_like_func, optPrintProgress);
+  Backend B(optOutput, malloc_like_func, optiMemAccMap, optPrintProgress);
   B.run(*M, MAM);
   
   return 0;

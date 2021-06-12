@@ -42,7 +42,8 @@ TEST(TestDemo, CheckMain) {
 
   string str = "tmp.txt";
   set<string> dict;
-  Backend B(str, dict, false);
+  map<Instruction*, Instruction*> dummyMap;
+  Backend B(str, dict, dummyMap, false);
   B.run(*M, MAM);
 
   str = readFileIntoString(str);

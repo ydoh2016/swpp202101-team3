@@ -46,7 +46,7 @@ PreservedAnalyses MergeBasicBlocksPass::run(Function& F, FunctionAnalysisManager
   // Finally, remove dangling phi nodes
   removeDanglingPhi(&F);
   
-  return PreservedAnalyses::all();
+  return PreservedAnalyses::none();
 }
 
 // Remove phis that are referring to deleted basic blocks

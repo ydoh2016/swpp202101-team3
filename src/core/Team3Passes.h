@@ -65,6 +65,26 @@ public:
   PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
 };
 
+class InliningPass : public PassInfoMixin<InliningPass> {
+private:
+  static int MAX_BB_COUNT;
+  void getFunctionCalls(Module *M, vector<CallInst*> *calls);
+  void cloneIntoCaller(CallInst *call, DominatorTree &DT);
+  void divideBasicBlock(Instruction *criteria);
+  int getBBCount(Function *F);
+public:
+  PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
+};
+
+class OptiMemAccess:public PassInfoMixin<OptiMemAccess> {
+public:
+  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+  OptiMemAccess(map<Instruction*, Instruction*>& refOptiMemAccMap):optiMemAccMap(refOptiMemAccMap){}
+private:
+  map<Instruction*, Instruction*>& optiMemAccMap;
+  Instruction* checkOptiPossible(Value* vn);
+};
+
 }
 
 #endif
