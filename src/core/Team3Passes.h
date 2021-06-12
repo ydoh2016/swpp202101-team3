@@ -57,6 +57,10 @@ public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
 
+class LoopInterchange : public PassInfoMixin<LoopInterchange> {
+public:
+  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+};
 class LoopReverseTerminatorPass : public PassInfoMixin<LoopReverseTerminatorPass> {
 private:
   bool tryReverseTerminator(BasicBlock *ExitingBlock);
