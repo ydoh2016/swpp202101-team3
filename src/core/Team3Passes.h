@@ -57,6 +57,13 @@ public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
 
+class LoopReverseTerminatorPass : public PassInfoMixin<LoopReverseTerminatorPass> {
+private:
+  bool tryReverseTerminator(BasicBlock *ExitingBlock);
+  CmpInst::Predicate getReversePredicate(CmpInst::Predicate pred);
+public:
+  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
+};
 
 class InliningPass : public PassInfoMixin<InliningPass> {
 private:
@@ -77,6 +84,7 @@ private:
   map<Instruction*, Instruction*>& optiMemAccMap;
   Instruction* checkOptiPossible(Value* vn);
 };
+
 }
 
 #endif
