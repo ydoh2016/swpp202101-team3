@@ -4,6 +4,20 @@ using namespace std;
 using namespace llvm;
 using namespace backend;
 
+namespace {
+    // Return sizeof(T) in bytes.
+    unsigned getAccessSize(Type *T) {
+        if (isa<PointerType>(T))
+            return 8;
+        else if (isa<IntegerType>(T)) {
+            return T->getIntegerBitWidth() == 1 ? 1 : (T->getIntegerBitWidth() / 8);
+        } else if (isa<ArrayType>(T)) {
+            return getAccessSize(T->getArrayElementType()) * T->getArrayNumElements();
+        }
+        assert(false && "Unsupported access size type!");
+    }
+}
+
 namespace backend {
 
 string AssemblyEmitter::name(Value* v) {
@@ -47,8 +61,8 @@ string AssemblyEmitter::stringBandWidth(Value* v) {
     return to_string(getBitWidth(v->getType()));
 }
 
-AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes) :
-            fout(fout), TM(&TM), SM(&SM), spOffset(spOffset), mallocLikeFunc(mallocLikes) {
+AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap& SM, map<Function*, SpInfo>& spOffset, set<string>& mallocLikes, map<Instruction*, Instruction*>& refOptiMemAccMap) :
+            fout(fout), TM(&TM), SM(&SM), spOffset(spOffset), mallocLikeFunc(mallocLikes), optiMemAccMap(refOptiMemAccMap) {
     //base assembly code for heap to stack
     //if there's not enough space, it will do malloc
     *fout << "start _Alloca 2:\n"
@@ -90,6 +104,9 @@ AssemblyEmitter::AssemblyEmitter(raw_ostream *fout, TargetMachine& TM, SymbolMap
 void AssemblyEmitter::visitFunction(Function& F) {
     //print the starting code.
     //finishing code will be printed outside the AssemblyEmitter.
+    countOfLoad = 0;
+    countOfStore = 0;
+    omaccInfos.clear();
     *fout << "start " << name(&F) << " " << F.arg_size() << ":\n";
 }
 void AssemblyEmitter::visitBasicBlock(BasicBlock& BB) {
@@ -152,6 +169,11 @@ void AssemblyEmitter::visitAllocaInst(AllocaInst& I) {
 
 //Memory Access insts.
 void AssemblyEmitter::visitLoadInst(LoadInst& I) {
+    bool opti = false;
+    auto it = optiMemAccMap.find(&I);
+    if(it != optiMemAccMap.end()) {
+        opti = true;
+    }
     Value* ptr = I.getPointerOperand();
     //bytes to load
     string size = to_string(getAccessSize(dyn_cast<PointerType>(ptr->getType())->getElementType()));
@@ -168,11 +190,69 @@ void AssemblyEmitter::visitLoadInst(LoadInst& I) {
     }
     //else a pointer stored in register,
     else if(Register* reg = symbol->castToRegister()) {
-        *fout << emitInst({name(&I), "= load", size, reg->getName(), "0"});
+        if(opti) {
+            string tmpReg = "r" + to_string((USER_REGISTER_NUM - remainRegister) + 1);
+            auto allocInst = dyn_cast<AllocaInst>(it->second);
+            Symbol* symbol = SM->get(allocInst);
+            if(Memory* mem = symbol->castToMemory()) {
+                auto it = omaccInfos.find(allocInst);
+                unsigned start = 0;
+                unsigned cnt = 0;
+                auto elemSize = (getAccessSize(allocInst->getAllocatedType()->getArrayElementType()));
+
+                if(it == omaccInfos.end()) {
+                    if(remainRegister < 1) {
+                        *fout << emitInst({name(&I), "= load", size, reg->getName(), "0"});
+                        return;
+                    }
+                    else {
+                        auto elemCount = allocInst->getAllocatedType()->getArrayNumElements();
+                        elemCount = remainRegister >= elemCount ? elemCount : remainRegister;
+                        start = USER_REGISTER_NUM - remainRegister + 1;
+                        cnt = elemCount;
+                        omaccInfos[allocInst] = {start, cnt};
+                        remainRegister -= cnt;
+                    }
+                }
+                else {
+                    auto& data = it->second;
+                    start = data.start;
+                    cnt = data.size;
+                }
+                *fout << "  " << tmpReg << "= sub " << reg->getName() << " " << mem->getBase()->getName() << " 64\n";
+                *fout << "  " << tmpReg << "= udiv " << tmpReg << " " << elemSize << " 64\n";
+                *fout << "  " << "switch " << tmpReg;
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << " " << i << " .load" << countOfLoad << "." << i;
+                }
+                *fout << " .normalLoad" << countOfLoad << "\n";
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << ".load" << countOfLoad << "." << i << ":\n";
+                    *fout << "  " << name(&I) << " = mul 1 " << "r" << start + i << " 64\n";
+                    *fout << "  " << "br .after.load" << countOfLoad << "\n"; 
+                }
+                *fout << ".normalLoad" << countOfLoad << ":\n";
+                *fout<<"  " << name(&I) << " = load " << size << " " << reg->getName() << " 0\n";
+                *fout<<"  " << "br .after.load" << countOfLoad << "\n"; 
+                *fout<<".after.load" << countOfLoad << ":\n"; 
+                countOfLoad += 1;
+            }
+            else {
+                *fout << emitInst({name(&I), "= load", size, reg->getName(), "0"});    
+            }
+        }
+        else {
+            *fout << emitInst({name(&I), "= load", size, reg->getName(), "0"});
+        }
     }
     else assert(false && "pointer of a memory operation should have an appropriate symbol assigned");
 }
 void AssemblyEmitter::visitStoreInst(StoreInst& I) {
+    bool opti = false;
+    auto it = optiMemAccMap.find(&I);
+    if(it != optiMemAccMap.end()) {
+        opti = true;
+    }
     Value* ptr = I.getPointerOperand();
     //bytes to load
     string size = to_string(getAccessSize(dyn_cast<PointerType>(ptr->getType())->getElementType()));
@@ -190,7 +270,60 @@ void AssemblyEmitter::visitStoreInst(StoreInst& I) {
     }
     //else a pointer stored in register,
     else if(Register* reg = symbol->castToRegister()) {
-        *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
+        if(opti) {
+            string tmpReg = "r" + to_string(reservoirForTemp);
+            auto allocInst = dyn_cast<AllocaInst>(it->second);
+            Symbol* symbol = SM->get(allocInst);
+            if(Memory* mem = symbol->castToMemory()) {
+                auto it = omaccInfos.find(allocInst);
+                unsigned start = 0;
+                unsigned cnt = 0;
+                auto elemSize = (getAccessSize(allocInst->getAllocatedType()->getArrayElementType()));
+                if(it == omaccInfos.end()) {
+                    if(remainRegister < 1) {
+                        *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
+                        return;
+                    }
+                    else {
+                        auto elemCount = allocInst->getAllocatedType()->getArrayNumElements();
+                        elemCount = remainRegister >= elemCount ? elemCount : remainRegister;
+                        start = USER_REGISTER_NUM - remainRegister + 1;
+                        cnt = elemCount;
+                        omaccInfos[allocInst] = {start, cnt};
+                        remainRegister -= cnt;
+                    }
+                }
+                else {
+                    auto& data = it->second;
+                    start = data.start;
+                    cnt = data.size;
+                }
+                
+                *fout << "  " << tmpReg << "= sub " << reg->getName() << " " << mem->getBase()->getName() << " 64\n";
+                *fout << "  " << tmpReg << "= udiv " << tmpReg << " " << elemSize << " 64\n";
+                *fout << "  " << "switch " << tmpReg;
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << " " << i << " .store" << countOfStore << "." << i;
+                }
+                *fout << " .normalStore" << countOfStore << "\n";
+                for(auto i = 0; i < cnt; ++i) {
+                    *fout << ".store" << countOfStore << "." << i << ":\n";
+                    *fout << "  " << "r" << start + i << " = mul 1 " << name(val) << " 64\n";
+                    *fout << "  " << "br .after.store" << countOfStore << "\n"; 
+                }
+                *fout << ".normalStore" << countOfStore << ":\n";
+                *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
+                *fout<<"  " << "br .after.store" << countOfStore << "\n"; 
+                *fout<<".after.store" << countOfStore << ":\n"; 
+                countOfStore += 1;
+            }
+            else {
+                *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
+            }
+        }
+        else {
+            *fout << emitInst({"store", size, name(val),reg->getName(), "0"});
+        }
     }
     else assert(false && "pointer of a memory operation should have an appropriate symbol assigned");
 }
