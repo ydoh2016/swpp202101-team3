@@ -1,0 +1,272 @@
+{
+  "sprint1": {
+    "binary_tree": {
+      "input1": 973.5,
+      "input2": 1866.7,
+      "input3": 25222.3,
+      "input4": 341769.4,
+      "input5": 62774907.8,
+      "input6": 1570.3,
+      "input7": 11512.6
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 78.4,
+      "input2": 451,
+      "input3": 133.6,
+      "input4": 23.2,
+      "input5": 37,
+      "input6": 395.8,
+      "input7": 437.2
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15341.7,
+      "input2": 15332.2,
+      "input3": 15345.2,
+      "input4": 15360.8,
+      "input5": 15360.8,
+      "input6": 15303.6,
+      "input7": 15303.6
+    },
+    "bitcount5": {
+      "input1": 341.8,
+      "input2": 638.7,
+      "input3": 382.8,
+      "input4": 310.4,
+      "input5": 348.1,
+      "input6": 536.2,
+      "input7": 561.6
+    },
+    "bubble_sort": {
+      "input1": 4274.7,
+      "input2": 409814.7,
+      "input3": 42704401.2004,
+      "input4": 8,
+      "input5": 415100,
+      "input6": 3868990.6,
+      "input7": 4277937105.027
+    },
+    "collatz": {
+      "input1": 41.1,
+      "input2": 41.1,
+      "input3": 1704.9,
+      "input4": 1253.2,
+      "input5": 801.5,
+      "input6": 1795.2,
+      "input7": 2246.8
+    },
+    "gcd": {
+      "input1": 25,
+      "input2": 38,
+      "input3": 67,
+      "input4": 271,
+      "input5": 96,
+      "input6": 52,
+      "input7": 155
+    },
+    "jenkins_hash": {
+      "input1": 11,
+      "input2": 930.7,
+      "input3": 5944,
+      "input4": 14022.7,
+      "input5": 55284.7,
+      "input6": 165202.2,
+      "input7": 550040.7,
+      "input8": 1649215.7
+    },
+    "matmul1": {
+      "input1": 286.4,
+      "input2": 4846.4,
+      "input3": 206254.4,
+      "input4": 11780782.3998,
+      "input5": 44310152.0017,
+      "input6": 350028231.6876,
+      "input7": 1176354315.5572,
+      "input8": 44310152.0017
+    },
+    "matmul2": {
+      "input1": 292.6,
+      "input2": 6664,
+      "input3": 400916.8,
+      "input4": 25492551.999,
+      "input5": 97190152.0141,
+      "input6": 777148232.5609,
+      "input7": 2622474310.6059,
+      "input8": 97190152.0141
+    },
+    "matmul3": {
+      "input1": 10,
+      "input2": 3008.7,
+      "input3": 141924.3,
+      "input4": 8542394.7001,
+      "input5": 32345564.998,
+      "input6": 257067067.3549,
+      "input7": 865704821.3766,
+      "input8": 32345564.998
+    },
+    "matmul4": {
+      "input1": 10,
+      "input2": 8140.2,
+      "input3": 466383.8,
+      "input4": 29303046.2,
+      "input5": 111540953,
+      "input6": 890629643.0032,
+      "input7": 3003978332.9665,
+      "input8": 111540953
+    },
+    "merge_sort": {
+      "input1": 6345.3,
+      "input2": 114483.1,
+      "input3": 1653953.8,
+      "input4": 21762151.4,
+      "input5": 114075,
+      "input6": 415407.7
+    },
+    "prime": {
+      "input1": 95.8,
+      "input2": 3366.1,
+      "input3": 780402.7,
+      "input4": 2646024.4,
+      "input5": 27468.5,
+      "input6": 3523546.3,
+      "input7": 163388242.9998
+    },
+    "quick_sort": {
+      "input1": 4403,
+      "input2": 78593.1,
+      "input3": 1214097.5,
+      "input4": 15778139.1,
+      "input5": 76881.4,
+      "input6": 284760.5
+    },
+    "radix_sort": {
+      "input1": 9914.6,
+      "input2": 143856.6,
+      "input3": 1375059,
+      "input4": 29684640.5001,
+      "input5": 308802,
+      "input6": 902887.5
+    },
+    "rmq1d_naive": {
+      "input1": 141.3,
+      "input2": 1479.6,
+      "input3": 2306,
+      "input4": 2838.2,
+      "input5": 1154810,
+      "input6": 5253166.8,
+      "input7": 999445026
+    },
+    "rmq1d_sparsetable": {
+      "input1": 1132,
+      "input2": 10348.8,
+      "input3": 15221.3,
+      "input4": 14131.6,
+      "input5": 911314.5,
+      "input6": 1598881.1,
+      "input7": 33920409.3992
+    },
+    "rmq2d_naive": {
+      "input1": 288.1,
+      "input2": 2935.8,
+      "input3": 26103.5,
+      "input4": 18346.7,
+      "input5": 10135657
+    },
+    "rmq2d_sparsetable": {
+      "input1": 4025.7,
+      "input2": 24916.4,
+      "input3": 139167.4,
+      "input4": 195065.2,
+      "input5": 114695485.1028
+    }
+  },
+  "all": {
+    "anagram": {
+      "input1": 222175,
+      "input2": 209135.6,
+      "input3": 21724005.4,
+      "input4": 21469227.2,
+      "input5": 21708177.8,
+      "input6": 217130821.8
+    },
+    "binary_tree": {
+      "input1": 1123.5,
+      "input2": 2486.1,
+      "input3": 30185.8,
+      "input4": 418388.2,
+      "input5": 72486285.2,
+      "input6": 1932.7,
+      "input7": 5053.5
+    },
+    "bitcount1": {
+      "input1": 82.2,
+      "input2": 535.8,
+      "input3": 149.4,
+      "input4": 15,
+      "input5": 31.8,
+      "input6": 468.6,
+      "input7": 519
+    },
+    "bitcount2": {
+      "input1": 78.4,
+      "input2": 451,
+      "input3": 133.6,
+      "input4": 23.2,
+      "input5": 37,
+      "input6": 395.8,
+      "input7": 437.2
+    },
+    "bitcount3": {
+      "input1": 49.4,
+      "input2": 548.2,
+      "input3": 135.4,
+      "input4": 15,
+      "input5": 32.2,
+      "input6": 290.2,
+      "input7": 307.4
+    },
+    "bitcount4": {
+      "input1": 15117.7,
+      "input2": 15108.4,
+      "input3": 15121.3,
+      "input4": 15136.8,
+      "input5": 15136.8,
+      "input6": 15079.6,
+      "input7": 15079.6
+    },
+    "bitcount5": {
+      "input1": 341.8,
+      "input2": 638.7,
+      "input3": 382.8,
+      "input4": 310.4,
+      "input5": 348.1,
+      "input6": 536.2,
+      "input7": 561.6
+    },
+    "bubble_sort": {
+      "input1": 3930.8,
+      "input2": 375820.8,
+      "input3": 39251703.3002,
+      "input4": 9,
+      "input5": 380795.1,
+      "input6": 3555231.7
+    }
+  }
+}

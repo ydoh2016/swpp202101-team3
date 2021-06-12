@@ -124,9 +124,10 @@ PreservedAnalyses Backend::run(Module &M, ModuleAnalysisManager &MAM) {
     exit(1);
   }
 
-  AssemblyEmitter Emitter(os, TM, symbolMap, spOffsetMap, mallocLikeFunc);
+  AssemblyEmitter Emitter(os, TM, symbolMap, spOffsetMap, mallocLikeFunc, optiMemAccMap);
   for(Function& F : M){
     if(F.isDeclaration()) continue;
+    Emitter.setRemainRegister(USER_REGISTER_NUM - RG.getNumColors(&F));
     Emitter.visit(F);
     *os << "end " << symbolMap.get(&F)->getName() << "\n\n";
   }

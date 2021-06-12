@@ -1,0 +1,39 @@
+start _Alloca 2:
+._defaultBB0:
+  r1 = mul arg1 arg2 64
+  r2 = sub sp r1 64
+  r3 = icmp slt r2 10000 64
+  br r3 ._malloc ._alloca
+._malloc:
+  r2 = malloc r1
+  ret r2
+._alloca:
+  ret r2
+end _Alloca
+
+start _SpCal 1:
+  ._defaultBB0:
+  r1 = icmp ugt arg1 102400 64
+  br r1 ._malloc ._alloca
+._malloc:
+  ret sp
+._alloca:
+  ret arg1
+end _SpCal
+
+start _Free 1:
+  ._defaultBB0:
+  r1 = icmp ugt arg1 102400 64
+  br r1 ._malloc ._alloca
+._malloc:
+  free arg1
+  ret
+._alloca:
+  ret
+end _Free
+
+start main 0:
+.entry:
+  ret 0 
+end main
+
