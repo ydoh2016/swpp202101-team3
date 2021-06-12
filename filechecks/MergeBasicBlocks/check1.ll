@@ -4,10 +4,8 @@ define i32 @func1(i32 %arg1, i32 %arg2, i32 %arg3) {
 ;CHECK-NEXT: [[COND1:r[0-9]+]] = icmp eq arg1 arg2 32
 ;CHECK-NEXT: [[A:r[0-9]+]] = sub arg2 arg3 32
 ;CHECK: .bb_2:
-;CHECK-NEXT: [[B:r[0-9]+]] = mul arg1 arg2 32
-;CHECK-NEXT: ret [[B]]
-;CHECK: .bb_3
-;
+;CHECK: .bb_3:
+;CHECK: ret [[R:r[0-9]+]]
   %cond1 = icmp eq i32 %arg1, %arg2
   br label %bb_1
 

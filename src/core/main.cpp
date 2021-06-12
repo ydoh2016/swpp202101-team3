@@ -21,6 +21,9 @@
 #include "llvm/Transforms/Scalar/TailRecursionElimination.h"
 // add header for gvn
 #include "llvm/Transforms/Scalar/GVN.h"
+// add header for indvars
+#include "llvm/Transforms/Scalar/LoopUnrollAndJamPass.h"
+#include "llvm/Transforms/Scalar/LoopUnrollPass.h"
 
 #include <string>
 
@@ -96,6 +99,8 @@ int main(int argc, char *argv[]) {
   PB.registerLoopAnalyses(LAM);
   PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
 
+  FunctionPassManager FPM5;
+
   // add existing passes
   //add Dead code Elimination
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "adce")  
@@ -103,6 +108,11 @@ int main(int argc, char *argv[]) {
   //add  Tail call elimination
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
     FPM.addPass(TailCallElimPass());
+
+  map<Instruction*, Instruction*> optiMemAccMap;
+
+  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "omacc")  
+    FPM.addPass(OptiMemAccess(optiMemAccMap));
   
   FunctionPassManager FPM1;
   FunctionPassManager FPM2;
@@ -129,14 +139,22 @@ int main(int argc, char *argv[]) {
 
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopinterchange")
     FPM4.addPass(LoopInterchange());
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopreverseterminator"){
+    FPM5.addPass(LoopReverseTerminatorPass());
+  }
 
   // from FPM to MPM
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM4)));
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
+    MPM.addPass(InliningPass());
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
+  
   MPM.run(*M, MAM);
+
   //////////////////////////////////////////////////// BY HERE
   SplitSelfLoopPass().run(*M, MAM);
   UnfoldVectorInstPass().run(*M, MAM);
@@ -151,11 +169,12 @@ int main(int argc, char *argv[]) {
     std::error_code ec;
     raw_fd_ostream output(outputDbg, ec);
     output << *M;
+    outs() << *M;
     output.close();
   }
 
   // execute backend to emit assembly
-  Backend B(optOutput, malloc_like_func, optPrintProgress);
+  Backend B(optOutput, malloc_like_func, optiMemAccMap, optPrintProgress);
   B.run(*M, MAM);
   
   return 0;
