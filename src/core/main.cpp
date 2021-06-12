@@ -140,15 +140,14 @@ int main(int argc, char *argv[]) {
     FPM5.addPass(LoopReverseTerminatorPass());
   }
 
-  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
-    MPM.addPass(InliningPass());
-
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
+    MPM.addPass(InliningPass());
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   
   MPM.run(*M, MAM);
 
