@@ -51,8 +51,6 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
     else {
       case1 = false;
     }
-            outs() << case1;
-
     interchange.at(i) = case1;
     // 2. is there no instruction other than inner loop
     //    idea by @ObjectOrientedLife Thank you :)
@@ -64,15 +62,12 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
     int successorCount = terminator->getNumSuccessors();
     for(int j = 0; j < successorCount; ++j) {
       BasicBlock* successor = terminator->getSuccessor(j);
-      outs() << "UFEWF" << successor->size();
       if(successor->size() == 3) {
         case2 = true;
       } else {
         case2 = false;
       }
     }
-        outs() << case2;
-
     interchange.at(i) = interchange.at(i) & case2;
   }
   /*
@@ -93,7 +88,6 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
    */
   for(int i = 0; i < outers.size(); ++i) {
     Loop* outer = outers.at(i);
-    outs() << interchange.at(i);
     if(!interchange.at(i)) continue;
     auto *HdrTerm = dyn_cast<BranchInst>(outer->getHeader()->getTerminator());
     if(!HdrTerm) continue;
@@ -103,15 +97,18 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
      */
     Value* X;
     BasicBlock* entry;
-    BasicBlock* outer_cond = outer->getHeader();
+    BasicBlock* outer_init;
+    BasicBlock* outer_cond = outer->getHeader()->getSingleSuccessor();
     BasicBlock* outer_body;
     BasicBlock* outer_inc;
     BasicBlock* outer_end;
+    BasicBlock* inner_init;
     BasicBlock* inner_cond = inners.at(i).at(0)->getHeader();
     BasicBlock* inner_body;
     BasicBlock* inner_inc;
     BasicBlock* inner_end;
-    entry = outer_cond->getSinglePredecessor();
+    outer_init = outer->getHeader();
+    inner_init = inners.at(i).at(0)->getHeader();
     BranchInst* i1 = dyn_cast<BranchInst>(outer_cond->getTerminator());
     match(i1, m_Br(m_Value(X), m_BasicBlock(outer_body), m_BasicBlock(outer_end)));
     BranchInst* i2 = dyn_cast<BranchInst>(inner_cond->getTerminator());
@@ -121,23 +118,49 @@ PreservedAnalyses LoopInterchange::run(Function &F, FunctionAnalysisManager &FAM
      * modify edges
      * issue : if there are several blocks in loop_body?
      */
+    // split entry and initialize i
+    /*Instruction* I = outer_init->getTerminator();
+    while(dyn_cast<StoreInst>(I)) {
+      I = I->getPrevNode();
+    }
+    entry = outer_init->splitBasicBlockBefore(I);
+    // split outer_body and initialie j
+    I = inner_init->getTerminator();
+    while(dyn_cast<StoreInst>(I)) {
+      I = I->getPrevNode();
+    }
+    outer_body = inner_init->splitBasicBlockBefore(I);
+    
+    // entry to inner_init
     BranchInst* I1 = dyn_cast<BranchInst>(entry->getTerminator());
-    BranchInst* I2 = dyn_cast<BranchInst>(outer_cond->getTerminator());
-    BranchInst* I3 = dyn_cast<BranchInst>(outer_body->getTerminator());
-    BranchInst* I4 = dyn_cast<BranchInst>(outer_inc->getTerminator());
+    I1->setSuccessor(0, inner_init);
+
+    // inner_init to inner_cond
+    // inner_cond to outer_init / inner_end
+    BranchInst* I2 = dyn_cast<BranchInst>(inner_cond->getTerminator());
+    I2->setSuccessor(0, outer_init);
+
+    // inner_end to exit
+    BranchInst* I3 = dyn_cast<BranchInst>(inner_end->getTerminator());
+    if(outer_end->getSingleSuccessor() == nullptr) I3->setSuccessor(0, outer_end);
+    else I3->setSuccessor(0, outer_end->getSingleSuccessor());
+
+    // outer_init to outer_cond
+    // outer_cond to inner_body / outer_end
+    BranchInst* I4 = dyn_cast<BranchInst>(outer_cond->getTerminator());
+    I4->setSuccessor(0, inner_body);
+
+    // outer_end to inner_inc
     BranchInst* I5 = dyn_cast<BranchInst>(outer_end->getTerminator());
-    BranchInst* I6 = dyn_cast<BranchInst>(inner_cond->getTerminator());
-    BranchInst* I7 = dyn_cast<BranchInst>(inner_body->getTerminator());
-    BranchInst* I8 = dyn_cast<BranchInst>(inner_inc->getTerminator());
-    BranchInst* I9 = dyn_cast<BranchInst>(inner_end->getTerminator());
-    I1->setSuccessor(0, inner_cond);
-    I2->setSuccessor(0, inner_body);
-    I3->setSuccessor(0, outer_cond);
-    I4->setSuccessor(0, inner_cond);
-    I6->setSuccessor(0, outer_body);
-    I7->setSuccessor(0, outer_inc);
+    I5->setSuccessor(0, inner_inc);
+
+    // inner_body to outer_inc
+    BranchInst* I6 = dyn_cast<BranchInst>(inner_body->getTerminator());
+    I6->setSuccessor(0, outer_inc);
+
+    // inner_inc to inner_cond
+    // outer_inc to outer_cond */
   }
-  outs() << "Done!\n";
   return PreservedAnalyses::all();
 }
 }
