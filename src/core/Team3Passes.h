@@ -67,15 +67,6 @@ private:
 public:
   PreservedAnalyses run(Module& M, ModuleAnalysisManager& MAM);
 };
-
-class OptiMemAccess:public PassInfoMixin<OptiMemAccess> {
-public:
-  PreservedAnalyses run(Function& F, FunctionAnalysisManager& FAM);
-  OptiMemAccess(map<Instruction*, Instruction*>& refOptiMemAccMap):optiMemAccMap(refOptiMemAccMap){}
-private:
-  map<Instruction*, Instruction*>& optiMemAccMap;
-  Instruction* checkOptiPossible(Value* vn);
-};
 }
 
 #endif
