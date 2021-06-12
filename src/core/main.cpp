@@ -21,6 +21,9 @@
 #include "llvm/Transforms/Scalar/TailRecursionElimination.h"
 // add header for gvn
 #include "llvm/Transforms/Scalar/GVN.h"
+// add header for indvars
+#include "llvm/Transforms/Scalar/LoopUnrollAndJamPass.h"
+#include "llvm/Transforms/Scalar/LoopUnrollPass.h"
 
 #include <string>
 
@@ -96,6 +99,8 @@ int main(int argc, char *argv[]) {
   PB.registerLoopAnalyses(LAM);
   PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
 
+  FunctionPassManager FPM5;
+
   // add existing passes
   //add Dead code Elimination
   if(specificPass == "all" || specificPass == "sprint1" || specificPass == "adce")  
@@ -131,11 +136,17 @@ int main(int argc, char *argv[]) {
   if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopreverseterminator"){
+    FPM5.addPass(LoopReverseTerminatorPass());
+  }
+
   // from FPM to MPM
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
+
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
     MPM.addPass(InliningPass());
   
@@ -155,6 +166,7 @@ int main(int argc, char *argv[]) {
     std::error_code ec;
     raw_fd_ostream output(outputDbg, ec);
     output << *M;
+    outs() << *M;
     output.close();
   }
 
