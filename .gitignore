@@ -50,3 +50,7 @@ bin/sf-compiler-tests
 
 # cost log file
 *.log
+
+# Mac
+.DS_Store
+
