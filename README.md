@@ -40,8 +40,9 @@ make test
 
 ## How to run
 
-Compile LLVM IR `input.ll` into an assembly `a.s` using this command:
+Compile LLVM IR `<input bitcode file>` into an assembly `<output assembly file>` using this command:
+(if you want select specific pass just write pass name on last command)
 
 ```
-bin/sf-compiler input.ll a.s
+bin/sf-compiler --debug-file=<debug output text file> <input bitcode file> <output assembly file> <select specific pass>
 ```
