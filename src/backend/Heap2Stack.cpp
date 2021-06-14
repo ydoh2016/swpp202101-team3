@@ -73,8 +73,10 @@ PreservedAnalyses Heap2Stack::run(Function &F, FunctionAnalysisManager &FAM) {
         if(Function *callee = call_inst -> getCalledFunction()) {
           if(callee -> getName().str() == "malloc") {
             // found malloc
-            if(F.getNumUses()<=0)
+            if(F.getNumUses()<=0){
+              // outs() << "check 0: " << F.getName().str() << "\n";
               heap_allocation.push_back(call_inst);
+            }
             else {
               vector<Instruction*> chk;
               chk.push_back(&I);
