@@ -238,10 +238,13 @@ void AbbrMemPass::replaceInstructions(Module *M) {
             vector<vector<Instruction*>> loadSequences;
             getInst(&BB, Instruction::Load, &loads);
             getSequences(loads, &loadSequences);
-            
+
             // Replace load instructions
             for (auto &sequence : loadSequences) {
                 Instruction *start = sequence[0];
+                if (start->getType() != int64Type) {
+                    continue;
+                }
                 auto VMask = ConstantInt::get(Type::getInt64Ty(mContext), getMask(sequence));
                 vector<Value*> vload8Args = {start->getOperand(0), VMask};
                 Instruction *vload8Call = CallInst::Create(vload8ty, vload8, 
@@ -268,6 +271,9 @@ void AbbrMemPass::replaceInstructions(Module *M) {
             // Replace store instructions
             for (auto &sequence : storeSequences) {
                 Instruction *start = sequence[0];
+                if (start->getOperand(0)->getType() != int64Type) {
+                    continue;
+                }
                 Value *vsPtr = start->getOperand(1); // Pointer to which values are stored
                 vector<Value*> vsVals; // 8 values to store
                 Instruction *end = start;
