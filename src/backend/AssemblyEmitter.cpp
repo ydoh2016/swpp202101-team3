@@ -47,11 +47,10 @@ string AssemblyEmitter::emitCopy(Instruction* v, Value* op) {
     Memory* mem = SM->get(op)? SM->get(op)->castToMemory() : NULL;
     if(mem) {
         if(mem->getBase() == TM->gvp()) {
-            outs() << "mem getOffset:" << mem->getOffset() << "\n";
             if(mem->getOffset() == 0)
-                return emitBinary(v, "mul", "204800", "1");
+                return emitBinary(v, "mul", "102400", "1");
             else
-                return emitBinary(v, "add", "204800", to_string(mem->getOffset()));    
+                return emitBinary(v, "sub", "102400", to_string(mem->getOffset()));    
         }
         if(mem->getOffset() == 0)
             return emitBinary(v, "mul", mem->getBase()->getName(), "1");
@@ -129,9 +128,10 @@ void AssemblyEmitter::visitBasicBlock(BasicBlock& BB) {
             for(auto& gv : BB.getModule()->globals()) {
                 //temporarily stores the GV pointer.
                 unsigned size = (getAccessSize(gv.getValueType()) + 7) / 8 * 8;
-                *fout << emitInst({"r1 = malloc", to_string(size)});
+                *fout << emitInst({"sp = sub sp", to_string(size), "64"});
+                //*fout << emitInst({"r1 = malloc", to_string(size)});
                 if(gv.hasInitializer() && !gv.getInitializer()->isZeroValue()) {
-                    *fout << emitInst({"store", to_string(getAccessSize(gv.getValueType())), name(gv.getInitializer()), "r1 0"});
+                    *fout << emitInst({"store", to_string(getAccessSize(gv.getValueType())), name(gv.getInitializer()), "sp 0"});
                 }
             }
         }
@@ -191,7 +191,7 @@ void AssemblyEmitter::visitLoadInst(LoadInst& I) {
             *fout << emitInst({name(&I), "= load", size, mem->getBase()->getName(), to_string(mem->getOffset())});
         }
         else if(mem->getBase() == TM->gvp()) {
-            *fout << emitInst({name(&I), "= load", size, "204800", to_string(mem->getOffset())});
+            *fout << emitInst({name(&I), "= load", size, to_string(102400 - mem->getOffset()), "0"});
         }
         else assert(false && "base of memory pointers should be sp or gvp");
     }
@@ -271,7 +271,7 @@ void AssemblyEmitter::visitStoreInst(StoreInst& I) {
             *fout << emitInst({"store", size, name(val), mem->getBase()->getName(), to_string(mem->getOffset())});
         }
         else if(mem->getBase() == TM->gvp()) {
-            *fout << emitInst({"store", size, name(val), "204800", to_string(mem->getOffset())});
+            *fout << emitInst({"store", size, name(val), to_string(102400 - mem->getOffset()), "0"});
         }
         else assert(false && "base of memory pointers should be sp or gvp");
     }
@@ -376,9 +376,9 @@ void AssemblyEmitter::visitPtrToIntInst(PtrToIntInst& I) {
             }
             else if(mem->getBase() == TM->gvp()) {
                 if(mem->getOffset() == 0)
-                    *fout << emitBinary(&I, "mul", "204800", "1");
+                    *fout << emitBinary(&I, "mul", "102400", "1");
                 else
-                    *fout << emitBinary(&I, "add", "204800", to_string(mem->getOffset()));
+                    *fout << emitBinary(&I, "mul", to_string(102400 - mem->getOffset()), "1");
             }
             else assert(false && "base of memory pointers should be sp or gvp");
         }
