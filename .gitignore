@@ -36,8 +36,7 @@ Makefile
 
 # Object and Binary files
 obj
-bin/sf-compiler
-bin/sf-compiler-tests
+bin
 
 # assembly files
 *.s

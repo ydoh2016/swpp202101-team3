@@ -103,15 +103,15 @@ int main(int argc, char *argv[]) {
 
   // add existing passes
   //add Dead code Elimination
-  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "adce")  
+  if(specificPass == "all" || specificPass == "sprint3" || specificPass == "adce")  
     FPM.addPass(ADCEPass());
   //add  Tail call elimination
-  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
-    FPM.addPass(TailCallElimPass());
+  // if(specificPass == "all" || specificPass == "sprint1" || specificPass == "tailcallelim")  
+  //   FPM.addPass(TailCallElimPass());
 
   map<Instruction*, Instruction*> optiMemAccMap;
 
-  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "omacc")  
+  if(specificPass == "all" || specificPass == "sprint3" || specificPass == "omacc")  
     FPM.addPass(OptiMemAccess(optiMemAccMap));
   
   FunctionPassManager FPM1;
@@ -120,37 +120,45 @@ int main(int argc, char *argv[]) {
   FunctionPassManager FPM4;
 
   //add custom passes
-  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "mergebasicblocks")
+  if(specificPass == "all" || specificPass == "sprint3" || specificPass == "mergebasicblocks")
     FPM1.addPass(MergeBasicBlocksPass());
 
-  //add Dead argument elimination
-  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "dae")  
+  // //add Dead argument elimination
+  if(specificPass == "all" || specificPass == "sprint3" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
-  if(specificPass == "all" || specificPass == "sprint1" || specificPass == "constantfolding")  
-    FPM2.addPass(ConstantFolding());
+  // if(specificPass == "all" || specificPass == "sprint3" || specificPass == "constantfolding")  
+  //   FPM2.addPass(ConstantFolding());
 
   set<string> malloc_like_func;
-  if(specificPass == "all" || specificPass == "sprint2" || specificPass == "heap2stack")
+  if(specificPass == "all" || specificPass == "sprint3" || specificPass == "heap2stack")
     FPM3.addPass(Heap2Stack(malloc_like_func));
 
-  if (specificPass == "all" || specificPass == "sprint2" || specificPass == "abbrmem")
+  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "abbrmem")
     MPM.addPass(AbbrMemPass());
 
-  if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopinterchange")
-    FPM4.addPass(LoopInterchange());
+
+  // if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopinterchange")
+  //   FPM4.addPass(LoopInterchange());
+
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopreverseterminator"){
     FPM5.addPass(LoopReverseTerminatorPass());
   }
 
+  // if (specificPass == "all" || specificPass == "sprint3" || specificPass == "loopunroll"){
+  //   FPM5.addPass(LoopUnrollPass());
+  // }
+
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
+  // MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM3)));
-  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM4)));
+  // MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM4)));
+
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
     MPM.addPass(InliningPass());
+
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM1))); 
   
   MPM.run(*M, MAM);

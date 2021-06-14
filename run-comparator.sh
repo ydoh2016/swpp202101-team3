@@ -23,15 +23,15 @@ truncate -s-1 table.txt
 printf "\n" >> table.txt
 printf "\n"
 
-for benchmark in `jq ".sprint1 | keys[]" result.json`; do
+for benchmark in `jq ".sprint3 | keys[]" result.json`; do
     CNT=1
-    for inp in `jq ".sprint1.${benchmark} | keys[]" result.json`; do
+    for inp in `jq ".sprint3.${benchmark} | keys[]" result.json`; do
         printf "%22s|" "${benchmark}-${CNT}" >> table.txt
         printf "%22s|" "${benchmark}-${CNT}"
         count=0
         for key in "${keys[@]}"; do
             cost=`jq ".${key}.${benchmark}.${inp}" result.json`
-            oriCost=`jq ".sprint1.${benchmark}.${inp}" result.json`
+            oriCost=`jq ".sprint3.${benchmark}.${inp}" result.json`
             diff=`echo $oriCost - $cost | bc -l`
             printf "%22s|" "${diff}" >> table.txt
             printf "%22s|" "${diff}"
@@ -56,8 +56,8 @@ done
 if (( $(echo "${total[0]} < 0" |bc -l) )); then
     echo ""
     echo ""
-    echo "COST LARGER THAN BEFORE!"
-    exit 0
+    echo "====================== COST LARGER THAN BEFORE! ======================"
+    exit 1
 else
     echo ""
     echo ""
