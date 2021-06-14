@@ -47,9 +47,16 @@ string AssemblyEmitter::emitCopy(Instruction* v, Value* op) {
     Memory* mem = SM->get(op)? SM->get(op)->castToMemory() : NULL;
     if(mem) {
         if(mem->getBase() == TM->gvp()) {
-            return emitBinary(v, "add", "204800", to_string(mem->getOffset()));    
+            outs() << "mem getOffset:" << mem->getOffset() << "\n";
+            if(mem->getOffset() == 0)
+                return emitBinary(v, "mul", "204800", "1");
+            else
+                return emitBinary(v, "add", "204800", to_string(mem->getOffset()));    
         }
-        return emitBinary(v, "add", mem->getBase()->getName(), to_string(mem->getOffset()));
+        if(mem->getOffset() == 0)
+            return emitBinary(v, "mul", mem->getBase()->getName(), "1");
+        else 
+            return emitBinary(v, "add", mem->getBase()->getName(), to_string(mem->getOffset()));
     }
     return emitBinary(v, "mul", name(op), "1");
 }
@@ -362,10 +369,16 @@ void AssemblyEmitter::visitPtrToIntInst(PtrToIntInst& I) {
     if(symbol) {
         if(Memory* mem = symbol->castToMemory()) {
             if(mem->getBase() == TM->fp()) {
-                *fout << emitBinary(&I, "add", mem->getBase()->getName(), to_string(mem->getOffset()));
+                if(mem->getOffset() == 0)
+                    *fout << emitBinary(&I, "mul", mem->getBase()->getName(), "1");
+                else 
+                    *fout << emitBinary(&I, "add", mem->getBase()->getName(), to_string(mem->getOffset()));
             }
             else if(mem->getBase() == TM->gvp()) {
-                *fout << emitBinary(&I, "add", "204800", to_string(mem->getOffset()));
+                if(mem->getOffset() == 0)
+                    *fout << emitBinary(&I, "mul", "204800", "1");
+                else
+                    *fout << emitBinary(&I, "add", "204800", to_string(mem->getOffset()));
             }
             else assert(false && "base of memory pointers should be sp or gvp");
         }
@@ -563,7 +576,37 @@ void AssemblyEmitter::visitBinaryOperator(BinaryOperator& I) {
     case Instruction::And:  opcode = "and"; break;
     case Instruction::Or:   opcode = "or"; break;
     case Instruction::Xor:  opcode = "xor"; break;
-    case Instruction::Add:  opcode = "add"; break;
+    case Instruction::Add:
+        if(1)
+        {
+            ConstantInt *C1 = dyn_cast<ConstantInt>(I.getOperand(0));
+            ConstantInt *C2 = dyn_cast<ConstantInt>(I.getOperand(1));
+            if(C1 && C2) {
+                *fout << emitBinary(&I, "mul", to_string(C1->getZExtValue() + C2->getZExtValue()), "1");
+                return;
+            }
+            else if(C1) {
+                if(C1->isZero()) {
+                    *fout << emitBinary(&I, "mul", name(I.getOperand(1)), "1");
+                    return;
+                }
+            }
+            else if(C2) {
+                if(C2->isZero()) {
+                    *fout << emitBinary(&I, "mul", name(I.getOperand(0)), "1");
+                    return;
+                }
+            }
+            else {
+                if(name(I.getOperand(0)) == name(I.getOperand(1))) {
+                    *fout << emitBinary(&I, "mul", name(I.getOperand(0)), "2");
+                    return;
+                }            
+            }
+            
+        }
+        opcode = "add"; 
+        break;
     case Instruction::Sub:  opcode = "sub"; break;
     default: assert(false && "undefined binary operation");
     }

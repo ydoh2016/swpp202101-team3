@@ -1,6 +1,6 @@
 define i32 @main() {
 ; CHECK-LABEL:  start main 0:
-; CHECK: [[REG1:r[0-9]+]] = add 1 1 32
+; CHECK: [[REG1:r[0-9]+]] = mul 2 1 32
 ; CHECK-NEXT: br .bb_true
 ; CHECK: .bb_true:
 ; CHECK-NEXT: br .bb_exit
