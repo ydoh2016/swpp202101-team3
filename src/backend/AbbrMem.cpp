@@ -211,25 +211,25 @@ int AbbrMemPass::getMask(const vector<Instruction*> &sequence) {
 
 // Declare vector memory access functions
 void AbbrMemPass::replaceInstructions(Module *M) {
-    bool declarationAdded = false;
-    LLVMContext &MContext = M->getContext();
-    Type *voidType = Type::getVoidTy(MContext);
+    LLVMContext &mContext = M->getContext();
+    PointerType *int64PtrType = Type::getInt64PtrTy(mContext);
+    IntegerType *int64Type = Type::getInt64Ty(mContext);
+    VectorType *int64VectorType = VectorType::get(int64Type, MAXSEQ, false);
+    Type *voidType = Type::getVoidTy(mContext);
 
-    PointerType *intPtrType = nullptr;
-    IntegerType *intType = nullptr;
-    VectorType *intVectorType = nullptr;
+    vector<Type*> vload8Args = {int64PtrType, int64Type}; 
+    FunctionType *vload8ty = FunctionType::get(int64VectorType, vload8Args, false); 
+    Function *vload8 = Function::Create(vload8ty, Function::ExternalLinkage, "vload8", M);
 
-    vector<Type*> vload8Args;
-    FunctionType *vload8ty = nullptr;
-    Function *vload8 = nullptr;
+    vector<Type*> extract8ArgTy = {int64VectorType, int64Type};
+    FunctionType *extract8ty = FunctionType::get(int64Type, extract8ArgTy, false); 
+    Function *extract8 = Function::Create(extract8ty, Function::ExternalLinkage, "extract_element8", M);
 
-    vector<Type*> extract8ArgTy;
-    FunctionType *extract8ty = nullptr;
-    Function *extract8 = nullptr;
-
-    vector<Type*> vstore8ArgTy;
-    FunctionType *vstore8ty = nullptr;
-    Function *vstore8 = nullptr;
+    vector<Type*> vstore8ArgTy = {int64Type, int64Type, int64Type, int64Type,
+                                 int64Type, int64Type, int64Type, int64Type,
+                                 int64PtrType, int64Type};
+    FunctionType *vstore8ty = FunctionType::get(voidType, vstore8ArgTy, false); 
+    Function *vstore8 = Function::Create(vstore8ty, Function::ExternalLinkage, "vstore8", M);
 
     for (auto &F : *M) {
         for (auto &BB : F) {
@@ -237,39 +237,15 @@ void AbbrMemPass::replaceInstructions(Module *M) {
             vector<Instruction*> loads;
             vector<vector<Instruction*>> loadSequences;
             getInst(&BB, Instruction::Load, &loads);
-            getSequences(loads, &loadSequences);    
-
-            // Limitation: same type for load and store
-            if (loadSequences.size() > 0 && loadSequences[0].size() > 0 &&
-                loadSequences[0][0] != nullptr && !declarationAdded) {
-                auto refType = loadSequences[0][0]->getType();
-                auto refPtrType = refType->getPointerTo();
-                intPtrType = refPtrType;
-                intType = dyn_cast<IntegerType>(refType);
-                intVectorType = VectorType::get(intType, MAXSEQ, false);
-
-                vload8Args = {intPtrType, intType};
-                vload8ty = FunctionType::get(intVectorType, vload8Args, false); 
-                vload8 = Function::Create(vload8ty, Function::ExternalLinkage, "vload8", M);
-
-                extract8ArgTy = {intVectorType, intType};
-                extract8ty = FunctionType::get(intType, extract8ArgTy, false); 
-                extract8 = Function::Create(extract8ty, Function::ExternalLinkage, "extract_element8", M);
-
-                vstore8ArgTy = {intType, intType, intType, intType,
-                                intType, intType, intType, intType,
-                                intPtrType, intType};
-                vstore8ty = FunctionType::get(voidType, vstore8ArgTy, false);
-                vstore8 = Function::Create(vstore8ty, Function::ExternalLinkage, "vstore8", M);
-            }
+            getSequences(loads, &loadSequences);
 
             // Replace load instructions
             for (auto &sequence : loadSequences) {
                 Instruction *start = sequence[0];
-                if (start->getType() != intType) {
+                if (start->getType() != int64Type) {
                     continue;
                 }
-                auto VMask = ConstantInt::get(Type::getInt64Ty(MContext), getMask(sequence));
+                auto VMask = ConstantInt::get(Type::getInt64Ty(mContext), getMask(sequence));
                 vector<Value*> vload8Args = {start->getOperand(0), VMask};
                 Instruction *vload8Call = CallInst::Create(vload8ty, vload8, 
                                                         vload8Args, "", start);
@@ -277,7 +253,7 @@ void AbbrMemPass::replaceInstructions(Module *M) {
                 for (int i = 0; i < MAXSEQ; ++i) {
                     if (sequence[i] != nullptr) {
                         // i : offset from the start, sequence[i] : i'th load instruction in a sequence
-                        auto VIdx = ConstantInt::get(Type::getInt64Ty(MContext), i);
+                        auto VIdx = ConstantInt::get(Type::getInt64Ty(mContext), i);
                         vector<Value*> extract8Args = {vload8Call, VIdx};
                         auto extract8Call = CallInst::Create(extract8ty, extract8, 
                                                             extract8Args, "", start);
@@ -295,7 +271,7 @@ void AbbrMemPass::replaceInstructions(Module *M) {
             // Replace store instructions
             for (auto &sequence : storeSequences) {
                 Instruction *start = sequence[0];
-                if (start->getOperand(0)->getType() != intType) {
+                if (start->getOperand(0)->getType() != int64Type) {
                     continue;
                 }
                 Value *vsPtr = start->getOperand(1); // Pointer to which values are stored
@@ -304,7 +280,7 @@ void AbbrMemPass::replaceInstructions(Module *M) {
                 for (int i = 0; i < MAXSEQ; ++i) {
                     // Use 0 as a placeholders
                     auto vsVal = sequence[i] == nullptr ? 
-                    ConstantInt::get(Type::getInt64Ty(MContext), 0) : 
+                    ConstantInt::get(Type::getInt64Ty(mContext), 0) : 
                     sequence[i]->getOperand(0);
                     vsVals.push_back(vsVal);
                     // Get the last position
@@ -312,7 +288,7 @@ void AbbrMemPass::replaceInstructions(Module *M) {
                         end = sequence[i];
                     }
                 }
-                auto VMask = ConstantInt::get(Type::getInt64Ty(MContext), getMask(sequence));
+                auto VMask = ConstantInt::get(Type::getInt64Ty(mContext), getMask(sequence));
                 vector<Value*> vstore8Args = {vsVals[0], vsVals[1], vsVals[2], 
                                               vsVals[3], vsVals[4], vsVals[5], 
                                               vsVals[6], vsVals[7], vsPtr, VMask};
