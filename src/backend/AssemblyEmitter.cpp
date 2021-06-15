@@ -598,9 +598,26 @@ void AssemblyEmitter::visitBinaryOperator(BinaryOperator& I) {
     case Instruction::URem: opcode = "urem"; break;
     case Instruction::SRem: opcode = "srem"; break;
     case Instruction::Mul:  opcode = "mul"; break;
-    case Instruction::Shl:  opcode = "shl"; break;
+    case Instruction::Shl:
+        {
+            ConstantInt* C = dyn_cast<ConstantInt>(I.getOperand(1));
+            if(C) {
+                *fout << emitBinary(&I, "mul", name(I.getOperand(0)), to_string(unsigned(pow(2,C->getZExtValue()))));
+                return;
+            }
+        }
+        opcode = "shl"; 
+        break;
     case Instruction::AShr: opcode = "ashr"; break;
-    case Instruction::LShr: opcode = "lshr"; break;
+    case Instruction::LShr: 
+        {
+            ConstantInt* C = dyn_cast<ConstantInt>(I.getOperand(1));
+            if(C) {
+                *fout << emitBinary(&I, "udiv", name(I.getOperand(0)), to_string(unsigned(pow(2,C->getZExtValue()))));
+                return;
+            }
+        }
+        opcode = "lshr"; break;
     case Instruction::And:  opcode = "and"; break;
     case Instruction::Or:   opcode = "or"; break;
     case Instruction::Xor:  opcode = "xor"; break;
