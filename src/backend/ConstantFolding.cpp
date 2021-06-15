@@ -1,5 +1,7 @@
 #include "../core/Team3Passes.h"
 
+#include "llvm/IR/IRBuilder.h"
+
 using namespace std;
 using namespace llvm;
 using namespace llvm::PatternMatch;
@@ -73,6 +75,57 @@ PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM
           if(checkConstant(X, X)) {
             ConstantInt* C = dyn_cast<ConstantInt>(X);
             ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, C -> getZExtValue() ? BranchInst::Create(BB1) : BranchInst::Create(BB2));
+          }
+        } else if(match(&I, m_Shl(m_Value(X), m_Value(Y)))) { // fold shift left inst
+          outs() << "SHL\n";
+          ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
+          BasicBlock::iterator bbit(I);
+          IRBuilder<> IB(F.getContext());
+          if(C2->getSExtValue() == 1 || C2->getZExtValue() == 1) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 2))));
+          }
+          else if(C2->getSExtValue() == 2 || C2->getZExtValue() == 2) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 4))));
+          }
+          else if(C2->getSExtValue() == 3 || C2->getZExtValue() == 3) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 8))));
+          }
+          else if(C2->getSExtValue() == 4 || C2->getZExtValue() == 4) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 16))));
+          }
+        } else if(match(&I, m_AShr(m_Value(X), m_Value(Y)))) { // fold arithmetic shift right inst
+          outs() << "ASHR\n";
+          ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
+          BasicBlock::iterator bbit(I);
+          IRBuilder<> IB(F.getContext());
+          if(C2->getSExtValue() == 1 || C2->getZExtValue() == 1) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateSDiv(X, ConstantInt::get(C2->getType(), 2))));
+          }
+          else if(C2->getSExtValue() == 2 || C2->getZExtValue() == 2) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateSDiv(X, ConstantInt::get(C2->getType(), 4))));
+          }
+          else if(C2->getSExtValue() == 3 || C2->getZExtValue() == 3) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateSDiv(X, ConstantInt::get(C2->getType(), 8))));
+          }
+          else if(C2->getSExtValue() == 4 || C2->getZExtValue() == 4) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateSDiv(X, ConstantInt::get(C2->getType(), 16))));
+          }
+        } else if(match(&I, m_LShr(m_Value(X), m_Value(Y)))) { // fold logical shift right inst
+          outs() << "LSHR\n";
+          ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
+          BasicBlock::iterator bbit(I);
+          IRBuilder<> IB(F.getContext());
+          if(C2->getSExtValue() == 1 || C2->getZExtValue() == 1) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateUDiv(X, ConstantInt::get(C2->getType(), 2))));
+          }
+          else if(C2->getSExtValue() == 2 || C2->getZExtValue() == 2) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateUDiv(X, ConstantInt::get(C2->getType(), 4))));
+          }
+          else if(C2->getSExtValue() == 3 || C2->getZExtValue() == 3) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateUDiv(X, ConstantInt::get(C2->getType(), 8))));
+          }
+          else if(C2->getSExtValue() == 4 || C2->getZExtValue() == 4) {
+            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateUDiv(X, ConstantInt::get(C2->getType(), 16))));
           }
         } else if(match(&I, m_Add(m_Value(X), m_Value(Y)))) { // fold add inst
           if(checkConstant(X, Y)) {

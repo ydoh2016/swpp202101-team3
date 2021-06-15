@@ -3,7 +3,7 @@
 ; CHECK-NEXT: ret 2
 ; CHECK-LABEL: end main
 define i32 @main(i32 %a, i32 %b) {
-  %c = add i32 10, 20
+  %c = shl i32 10, 20
   %d = sub i32 %c, 2
   %e = mul i32 %d, 4
   %f = urem i32 %e, 40
