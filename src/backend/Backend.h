@@ -92,6 +92,7 @@ class TargetMachine {
   Register* fpreg;
   Register* spreg;
   Register* gvpreg;
+  Register* sgvpreg;
   Register* fakereg;
 
 public:
@@ -100,6 +101,7 @@ public:
   Register* arg(unsigned);
   Register* sp();
   Register* gvp();
+  Register* sgvp();
   Register* fakeReg();
   Register* fp();
 
