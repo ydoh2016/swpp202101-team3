@@ -127,8 +127,8 @@ int main(int argc, char *argv[]) {
   if(specificPass == "all" || specificPass == "sprint3" || specificPass == "dae")  
     MPM.addPass(DeadArgumentEliminationPass());
   
-  // if(specificPass == "all" || specificPass == "sprint3" || specificPass == "constantfolding")  
-  //   FPM2.addPass(ConstantFolding());
+  if(specificPass == "all" || specificPass == "sprint3" || specificPass == "constantfolding")  
+    FPM2.addPass(ConstantFolding());
 
   set<string> malloc_like_func;
   if(specificPass == "all" || specificPass == "sprint3" || specificPass == "heap2stack")
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
   // from FPM to MPM
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM5)));
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  // MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM2)));
   // MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM4)));
 
   if (specificPass == "all" || specificPass == "sprint3" || specificPass == "inlining")
