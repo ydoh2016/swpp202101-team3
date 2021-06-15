@@ -48,6 +48,12 @@ string AssemblyEmitter::emitCopy(Instruction* v, Value* op) {
     if(mem) {
         if(mem->getBase() == TM->gvp()) {
             if(mem->getOffset() == 0)
+                return emitBinary(v, "mul", "204800", "1");
+            else
+                return emitBinary(v, "add", "204800", to_string(mem->getOffset()));    
+        }
+        if(mem->getBase() == TM->sgvp()) {
+            if(mem->getOffset() == 0)
                 return emitBinary(v, "mul", "102400", "1");
             else
                 return emitBinary(v, "sub", "102400", to_string(mem->getOffset()));    
@@ -126,12 +132,22 @@ void AssemblyEmitter::visitBasicBlock(BasicBlock& BB) {
         if(BB.getParent()->getName() == "main" && BB.getModule()->getGlobalList().size()!=0) {
             *fout << "  ; Init global variables\n";
             for(auto& gv : BB.getModule()->globals()) {
-                //temporarily stores the GV pointer.
-                unsigned size = (getAccessSize(gv.getValueType()) + 7) / 8 * 8;
-                *fout << emitInst({"sp = sub sp", to_string(size), "64"});
-                //*fout << emitInst({"r1 = malloc", to_string(size)});
-                if(gv.hasInitializer() && !gv.getInitializer()->isZeroValue()) {
-                    *fout << emitInst({"store", to_string(getAccessSize(gv.getValueType())), name(gv.getInitializer()), "sp 0"});
+                Memory* mem = SM->get(&gv)->castToMemory();
+                if(mem->getBase() == TM->gvp()) {
+                    //temporarily stores the GV pointer.
+                    unsigned size = (getAccessSize(gv.getValueType()) + 7) / 8 * 8;
+                    *fout << emitInst({"r1 = malloc", to_string(size)});
+                    if(gv.hasInitializer() && !gv.getInitializer()->isZeroValue()) {
+                        *fout << emitInst({"store", to_string(getAccessSize(gv.getValueType())), name(gv.getInitializer()), "r1 0"});
+                    }
+                }
+                else if(mem->getBase() == TM->sgvp()) {
+                    //temporarily stores the SGVP pointer.
+                    unsigned size = (getAccessSize(gv.getValueType()) + 7) / 8 * 8;
+                    *fout << emitInst({"sp = sub sp", to_string(size), "64"});
+                    if(gv.hasInitializer() && !gv.getInitializer()->isZeroValue()) {
+                        *fout << emitInst({"store", to_string(getAccessSize(gv.getValueType())), name(gv.getInitializer()), "sp 0"});
+                    }
                 }
             }
         }
@@ -191,9 +207,12 @@ void AssemblyEmitter::visitLoadInst(LoadInst& I) {
             *fout << emitInst({name(&I), "= load", size, mem->getBase()->getName(), to_string(mem->getOffset())});
         }
         else if(mem->getBase() == TM->gvp()) {
+            *fout << emitInst({name(&I), "= load", size, "204800", to_string(mem->getOffset())});
+        }
+        else if(mem->getBase() == TM->sgvp()) {
             *fout << emitInst({name(&I), "= load", size, to_string(102400 - mem->getOffset()), "0"});
         }
-        else assert(false && "base of memory pointers should be sp or gvp");
+        else assert(false && "base of memory pointers should be sp, sgvp or gvp");
     }
     //else a pointer stored in register,
     else if(Register* reg = symbol->castToRegister()) {
@@ -271,9 +290,12 @@ void AssemblyEmitter::visitStoreInst(StoreInst& I) {
             *fout << emitInst({"store", size, name(val), mem->getBase()->getName(), to_string(mem->getOffset())});
         }
         else if(mem->getBase() == TM->gvp()) {
+            *fout << emitInst({"store", size, name(val), "204800", to_string(mem->getOffset())});
+        }
+        else if(mem->getBase() == TM->sgvp()) {
             *fout << emitInst({"store", size, name(val), to_string(102400 - mem->getOffset()), "0"});
         }
-        else assert(false && "base of memory pointers should be sp or gvp");
+        else assert(false && "base of memory pointers should be sp, sgvp or gvp");
     }
     //else a pointer stored in register,
     else if(Register* reg = symbol->castToRegister()) {
@@ -376,11 +398,17 @@ void AssemblyEmitter::visitPtrToIntInst(PtrToIntInst& I) {
             }
             else if(mem->getBase() == TM->gvp()) {
                 if(mem->getOffset() == 0)
+                    *fout << emitBinary(&I, "mul", "204800", "1");
+                else
+                    *fout << emitBinary(&I, "mul", "204800", to_string(mem->getOffset()));
+            }
+            else if(mem->getBase() == TM->sgvp()) {
+                if(mem->getOffset() == 0)
                     *fout << emitBinary(&I, "mul", "102400", "1");
                 else
                     *fout << emitBinary(&I, "mul", to_string(102400 - mem->getOffset()), "1");
             }
-            else assert(false && "base of memory pointers should be sp or gvp");
+            else assert(false && "base of memory pointers should be sp,gvp or sgvp");
         }
         //else a pointer stored in register,
         else if(Register* reg = symbol->castToRegister()) {

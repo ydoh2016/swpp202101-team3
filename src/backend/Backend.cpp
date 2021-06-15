@@ -582,13 +582,22 @@ SymbolMap::SymbolMap(Module* M, TargetMachine& TM, RegisterGraph& RG) : M(M), TM
   }
 
   //Assign registers for Global variables
-  unsigned acc = 0; //accumulated offset from the gvp pointer
+  unsigned accForSGVP = 0; //accumulated offset from the gvp pointer
+  unsigned accForGVP = 0;
   for(Value& gv : M->globals()) {
     if(!isa<GlobalVariable>(gv)) continue;
     unsigned size = getAccessSize(dyn_cast<GlobalVariable>(&gv)->getValueType());
-    acc += (size+7) / 8 * 8;
-    Memory* gvaddr = new Memory(TM.gvp(), acc);
-    symbolTable[&gv] = gvaddr;
+    unsigned added = (size+7) / 8 * 8;
+    if(accForSGVP + added > 10000) {
+      Memory* gvaddr = new Memory(TM.gvp(), accForGVP);
+      accForGVP += added;
+      symbolTable[&gv] = gvaddr;
+    }
+    else {
+      accForSGVP += added;
+      Memory* gvaddr = new Memory(TM.sgvp(), accForSGVP);
+      symbolTable[&gv] = gvaddr;
+    }
   }
 }
 
