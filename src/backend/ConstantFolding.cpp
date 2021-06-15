@@ -77,24 +77,30 @@ PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM
             ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, C -> getZExtValue() ? BranchInst::Create(BB1) : BranchInst::Create(BB2));
           }
         } else if(match(&I, m_Shl(m_Value(X), m_Value(Y)))) { // fold shift left inst
-          outs() << "SHL\n";
+          //outs() << "SHL\n";
           ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
-          BasicBlock::iterator bbit(I);
-          IRBuilder<> IB(F.getContext());
-          if(C2->getSExtValue() == 1 || C2->getZExtValue() == 1) {
-            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 2))));
-          }
-          else if(C2->getSExtValue() == 2 || C2->getZExtValue() == 2) {
-            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 4))));
-          }
-          else if(C2->getSExtValue() == 3 || C2->getZExtValue() == 3) {
-            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 8))));
-          }
-          else if(C2->getSExtValue() == 4 || C2->getZExtValue() == 4) {
-            ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 16))));
+          if(C2 != nullptr) {
+            BasicBlock::iterator bbit(I);
+            IRBuilder<> IB(F.getContext());
+            if(C2->getSExtValue() == 1 || C2->getZExtValue() == 1) {
+              //outs() << "SHL1\n";
+              ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 2))));
+            }
+            else if(C2->getSExtValue() == 2 || C2->getZExtValue() == 2) {
+              //outs() << "SHL2\n";
+              ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 4))));
+            }
+            else if(C2->getSExtValue() == 3 || C2->getZExtValue() == 3) {
+              //outs() << "SHL3\n";
+              ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 8))));
+            }
+            else if(C2->getSExtValue() == 4 || C2->getZExtValue() == 4) {
+              //outs() << "SHL4\n";
+              ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateMul(X, ConstantInt::get(C2->getType(), 16))));
+            }
           }
         } else if(match(&I, m_AShr(m_Value(X), m_Value(Y)))) { // fold arithmetic shift right inst
-          outs() << "ASHR\n";
+          //outs() << "ASHR\n";
           ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
           BasicBlock::iterator bbit(I);
           IRBuilder<> IB(F.getContext());
@@ -111,7 +117,7 @@ PreservedAnalyses ConstantFolding::run(Function &F, FunctionAnalysisManager &FAM
             ReplaceInstWithInst(I.getParent() -> getInstList(), bbit, dyn_cast<Instruction>(IB.CreateSDiv(X, ConstantInt::get(C2->getType(), 16))));
           }
         } else if(match(&I, m_LShr(m_Value(X), m_Value(Y)))) { // fold logical shift right inst
-          outs() << "LSHR\n";
+          //outs() << "LSHR\n";
           ConstantInt* C2 = dyn_cast<ConstantInt>(Y);
           BasicBlock::iterator bbit(I);
           IRBuilder<> IB(F.getContext());

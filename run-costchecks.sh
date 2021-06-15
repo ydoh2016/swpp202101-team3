@@ -14,8 +14,9 @@ failed_pass=()
 
 # echo '{}' | jq '.' > result.json
 
-passes=("all")
-# passes+=("sprint1")
+# passes=(`ls -1 ./filechecks`)
+# passes=('no')
+passes=('all')
 
 for pass in "${passes[@]}"; do
     failed_inputs=()
